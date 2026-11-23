@@ -13,8 +13,8 @@ export interface AIGenerateResult {
 }
 
 const GROQ_FREE_MODELS = [
-  { id: 'openai/gpt-oss-120b', label: 'Groq • GPT-OSS 120B' },
   { id: 'qwen/qwen3.8-27b', label: 'Groq • Qwen 3.8 27B' },
+  { id: 'openai/gpt-oss-120b', label: 'Groq • GPT-OSS 120B' },
   { id: 'openai/gpt-oss-20b', label: 'Groq • GPT-OSS 20B' },
 ];
 

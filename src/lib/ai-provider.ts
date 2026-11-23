@@ -13,8 +13,9 @@ export interface AIGenerateResult {
 }
 
 const GROQ_FREE_MODELS = [
-  { id: 'llama-3.3-70b-versatile', label: 'Groq • Llama 3.3 70B' },
-  { id: 'llama-3.1-8b-instant', label: 'Groq • Llama 3.1 8B' },
+  { id: 'openai/gpt-oss-120b', label: 'Groq • GPT-OSS 120B' },
+  { id: 'qwen/qwen3.8-27b', label: 'Groq • Qwen 3.8 27B' },
+  { id: 'openai/gpt-oss-20b', label: 'Groq • GPT-OSS 20B' },
 ];
 
 // Somente modelos explicitamente ":free" / "openrouter/free" (custo $0.00 garantido)

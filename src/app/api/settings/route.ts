@@ -4,7 +4,7 @@ import {
   cloudListQuestionsWithProgress,
   cloudUpdateAppSettings,
 } from '@/lib/cloud-store';
-import { getPreferredGeminiModel, isGeminiConfigured } from '@/lib/gemini';
+import { getConfiguredAIProviders, isAnyFreeAIConfigured } from '@/lib/ai-provider';
 import { getAuthenticatedSupabase } from '@/lib/supabase/server';
 import type { AppSettings } from '@/types/domain';
 
@@ -30,9 +30,9 @@ export async function GET() {
         multiplaCount: questions.filter((q) => q.tipo === 'multipla').length,
         withImageCount: questions.filter((q) => Boolean(q.imagem || q.managedImageUrl)).length,
         missingImageCount: questions.filter((q) => q.imageMissing).length,
-        aiProviderConfigured: isGeminiConfigured() || Boolean(process.env.OPENAI_API_KEY),
-        geminiConfigured: isGeminiConfigured(),
-        geminiModel: getPreferredGeminiModel(),
+        aiProviderConfigured: isAnyFreeAIConfigured() || Boolean(process.env.OPENAI_API_KEY),
+        geminiConfigured: isAnyFreeAIConfigured(),
+        geminiModel: getConfiguredAIProviders().join(' → ') || 'Não configurado',
       },
       questionsWithImages: questions.filter((q) => Boolean(q.imagem || q.managedImageUrl)),
     });

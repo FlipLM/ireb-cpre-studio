@@ -3,7 +3,7 @@ import path from 'node:path';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { DEFAULT_APP_SETTINGS } from '@/lib/db';
 import { computeMasteryLevel, computeNextSpacedReview, evaluateAnswer } from '@/lib/evaluation';
-import { generateWithGemini, isGeminiConfigured } from '@/lib/gemini';
+import { generateWithFreeCascade, isAnyFreeAIConfigured } from '@/lib/ai-provider';
 import { DEFAULT_QUESTION_TOPIC_MAP, DEFAULT_TOPICS } from '@/lib/taxonomy';
 import { normalizeAnswerSet } from '@/lib/evaluation';
 import type {
@@ -1430,7 +1430,7 @@ export async function cloudGenerateComplementaryExplanation(
     practicalExample: 'Tente explicar em voz alta por que a alternativa correta se aplica a um projeto real.',
   };
 
-  if (isGeminiConfigured()) {
+  if (isAnyFreeAIConfigured()) {
     try {
       const prompt = [
         'Você é um tutor didático de Engenharia de Requisitos (IREB CPRE-FL).',
@@ -1442,18 +1442,18 @@ export async function cloudGenerateComplementaryExplanation(
         `Explicação original: ${q.explicacao}`,
       ].join('\n');
 
-      const res = await generateWithGemini({
+      const res = await generateWithFreeCascade({
         systemInstruction: 'Responda estritamente em JSON válido em português.',
         messages: [{ role: 'user', text: prompt }],
         temperature: 0.3,
-        maxOutputTokens: 2048,
+        maxOutputTokens: 1600,
         responseMimeType: 'application/json',
       });
       const parsed = JSON.parse(res.text) as Partial<typeof payload>;
       if (parsed.conceptSummary && parsed.distractorsAnalysis) {
         payload = {
           questionCodigo: q.codigo,
-          provider: `gemini:${res.model}`,
+          provider: `${res.provider}:${res.model}`,
           conceptSummary: String(parsed.conceptSummary),
           distractorsAnalysis: String(parsed.distractorsAnalysis),
           memoryTip: String(parsed.memoryTip ?? payload.memoryTip),

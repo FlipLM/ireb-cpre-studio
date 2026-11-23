@@ -3,11 +3,10 @@ import { z } from 'zod';
 import { cloudGetQuestionDetail } from '@/lib/cloud-store';
 import { getAuthenticatedSupabase } from '@/lib/supabase/server';
 import {
-  generateWithGemini,
-  getPreferredGeminiModel,
-  isGeminiConfigured,
-  type GeminiMessage,
-} from '@/lib/gemini';
+  generateWithFreeCascade,
+  isAnyFreeAIConfigured,
+  type AIMessage,
+} from '@/lib/ai-provider';
 import { loadProfessorSkill } from '@/lib/professor-skill';
 import type { QuestionWithProgress } from '@/types/domain';
 
@@ -125,11 +124,11 @@ export async function POST(
 
     const { question } = detail;
 
-    if (!isGeminiConfigured()) {
+    if (!isAnyFreeAIConfigured()) {
       return NextResponse.json({
         reply: buildLocalFallbackReply(question, action, hintLevel),
         provider: 'local-fallback',
-        model: getPreferredGeminiModel(),
+        model: 'local',
         usedFallback: true,
         needsApiKey: true,
       });
@@ -160,7 +159,7 @@ export async function POST(
 
     const systemInstruction = `${skill.content}\n\n${runtimeDirective}`;
 
-    const messages: GeminiMessage[] = [];
+    const messages: AIMessage[] = [];
 
     if (action === 'hint') {
       messages.push({
@@ -185,17 +184,17 @@ export async function POST(
       });
     }
 
-    const result = await generateWithGemini({
+    const result = await generateWithFreeCascade({
       systemInstruction,
       messages,
       temperature: action === 'hint' ? 0.55 : 0.45,
-      maxOutputTokens: action === 'hint' ? 1500 : 3000,
+      maxOutputTokens: action === 'hint' ? 900 : 1800,
     });
 
     return NextResponse.json({
       reply: result.text,
-      provider: 'gemini',
-      model: result.model,
+      provider: result.provider,
+      model: result.displayLabel,
       usedFallback: false,
       needsApiKey: false,
     });

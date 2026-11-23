@@ -1,0 +1,807 @@
+[
+  {
+    "numero": 1,
+    "codigo": "ID-030",
+    "enunciado": "Qual das seguintes técnicas de resolução de conflitos tende a produzir efeitos mais prolongados?",
+    "tipo": "unica",
+    "quantidade_respostas": "1",
+    "alternativas": {
+      "A": "Imposição",
+      "B": "Escolha aleatória",
+      "C": "Votação",
+      "D": "Acordo"
+    },
+    "resposta_correta": "D",
+    "explicacao": "No IREB CPRE-FL, a técnica de Acordo (agreement / ganha-ganha) busca uma solução satisfatória para todas as partes envolvidas, produzindo efeitos mais duradouros do que imposição, votação ou escolha aleatória.",
+    "imagem": null,
+    "print": "C:/Users/filip/Pictures/Screenshots/Simulado 1/Captura de tela 2026-11-23 082118.png"
+  },
+  {
+    "numero": 2,
+    "codigo": "ID-007",
+    "enunciado": "É correto dizer que o contexto do sistema é...",
+    "tipo": "unica",
+    "quantidade_respostas": "1",
+    "alternativas": {
+      "A": "... uma parte do ambiente do sistema.",
+      "B": "... uma parte do limite do sistema.",
+      "C": "... sinônimo de ambiente de sistema.",
+      "D": "... sinônimo de limite do sistema."
+    },
+    "resposta_correta": "A",
+    "explicacao": "O contexto do sistema é a parte relevante do ambiente do sistema que influencia o sistema ou seus requisitos (não é todo o ambiente, nem o limite do sistema).",
+    "imagem": null,
+    "print": "C:/Users/filip/Pictures/Screenshots/Simulado 1/Captura de tela 2026-11-23 082127.png"
+  },
+  {
+    "numero": 3,
+    "codigo": "ID-011",
+    "enunciado": "Escolha a sentença ERRADA no que se refere às boas práticas para lidar com níveis de abstração de requisitos.",
+    "tipo": "unica",
+    "quantidade_respostas": "1",
+    "alternativas": {
+      "A": "Se o que está sendo especificado for um elemento de baixo nível da solução, naturalmente o requisito associado a este elemento deverá ser especificado em um baixo nível de abstração.",
+      "B": "Em grandes produtos de trabalho, os requisitos de diferentes níveis de abstração devem ser organizados por meio da estruturação da especificação.",
+      "C": "Em produtos de trabalho pequenos, os requisitos devem permanecer no mesmo nível de abstração.",
+      "D": "Não há problema em misturar requisitos de diferentes níveis de abstração em produtos de trabalho de médio porte."
+    },
+    "resposta_correta": "D",
+    "explicacao": "Misturar requisitos de diferentes níveis de abstração sem estruturação adequada é uma má prática em qualquer porte de produto de trabalho, pois compromete a clareza, a revisão e a rastreabilidade.",
+    "imagem": null,
+    "print": "C:/Users/filip/Pictures/Screenshots/Simulado 1/Captura de tela 2026-11-23 082135.png"
+  },
+  {
+    "numero": 4,
+    "codigo": "ID-012",
+    "enunciado": "O nível de detalhamento dos requisitos deve ser maior...",
+    "tipo": "unica",
+    "quantidade_respostas": "1",
+    "alternativas": {
+      "A": "quanto maior for a liberdade a ser dada aos desenvolvedores.",
+      "B": "quanto mais familiarizada estiver a equipe de desenvolvimento com o contexto.",
+      "C": "quanto maior for a disponibilidade de feedback dos stakeholders.",
+      "D": "quanto maior for o benefício do requisito."
+    },
+    "resposta_correta": "D",
+    "explicacao": "Maior liberdade para desenvolvedores, maior familiaridade com o contexto e alta disponibilidade de feedback permitem requisitos menos detalhados. Já requisitos de maior benefício/criticidade justificam maior nível de detalhamento.",
+    "imagem": null,
+    "print": "C:/Users/filip/Pictures/Screenshots/Simulado 1/Captura de tela 2026-11-23 082141.png"
+  },
+  {
+    "numero": 5,
+    "codigo": "ID-005",
+    "enunciado": "Todos os itens a seguir são considerados princípios de Engenharia de Requisitos, EXCETO:",
+    "tipo": "unica",
+    "quantidade_respostas": "1",
+    "alternativas": {
+      "A": "Os requisitos devem ser vistos como um fim em si mesmo, não como um meio para atingir um fim.",
+      "B": "Sistemas não podem ser compreendidos de maneira isolada.",
+      "C": "Engenharia de Requisitos trata de satisfazer as necessidades das partes interessadas.",
+      "D": "Não é possível desenvolver um sistema com sucesso sem uma base comum de entendimento."
+    },
+    "resposta_correta": "A",
+    "explicacao": "Pelo princípio da orientação a valor (IREB), requisitos são um meio para atingir um fim (gerar valor), e nunca um fim em si mesmos.",
+    "imagem": null,
+    "print": "C:/Users/filip/Pictures/Screenshots/Simulado 1/Captura de tela 2026-11-23 082145.png"
+  },
+  {
+    "numero": 6,
+    "codigo": "ID-024",
+    "enunciado": "A implementação da rastreabilidade oferece muitos benefícios para a ER. Dito isso, quais dos benefícios listados a seguir seriam os MENOS aplicáveis?",
+    "tipo": "multipla",
+    "quantidade_respostas": "2",
+    "alternativas": {
+      "A": "Ela ajuda a analisar os impactos da mudança nos requisitos.",
+      "B": "Ajuda a produzir requisitos verificáveis.",
+      "C": "Ela ajuda a produzir requisitos inequívocos.",
+      "D": "Ela ajuda a descobrir a origem de um requisito.",
+      "E": "Ela ajuda na busca por produtos de trabalho faltantes relacionados aos requisitos."
+    },
+    "resposta_correta": [
+      "B",
+      "C"
+    ],
+    "explicacao": "A rastreabilidade ajuda na análise de impacto de mudanças (A), na descoberta da origem do requisito (D) e na identificação de produtos de trabalho faltantes (E), mas não garante por si só que o requisito seja verificável (B) ou inequívoco (C).",
+    "imagem": null,
+    "print": "C:/Users/filip/Pictures/Screenshots/Simulado 1/Captura de tela 2026-11-23 082150.png"
+  },
+  {
+    "numero": 7,
+    "codigo": "ID-026",
+    "enunciado": "É INCORRETO afirmar que:",
+    "tipo": "unica",
+    "quantidade_respostas": "1",
+    "alternativas": {
+      "A": "Desenvolvedores e operadores são exemplos de stakeholders.",
+      "B": "Oponentes e concorrentes são exemplos de stakeholders.",
+      "C": "Os stakeholders de um sistema são sua principal fonte de requisitos.",
+      "D": "Mesmo pessoas/organizações que não possuem relação relevante com o sistema podem ser consideradas como stakeholders."
+    },
+    "resposta_correta": "D",
+    "explicacao": "Stakeholders são pessoas ou organizações que têm influência direta ou indireta relevante sobre o sistema ou são afetadas por ele (incluindo desenvolvedores, operadores, oponentes e concorrentes). Quem não possui relação relevante não é stakeholder.",
+    "imagem": null,
+    "print": "C:/Users/filip/Pictures/Screenshots/Simulado 1/Captura de tela 2026-11-23 082158.png"
+  },
+  {
+    "numero": 8,
+    "codigo": "ID-004",
+    "enunciado": "Quais das atividades a seguir devem ser realizadas por um engenheiro de requisitos?",
+    "tipo": "multipla",
+    "quantidade_respostas": "2",
+    "alternativas": {
+      "A": "Estabelecer a missão empresarial.",
+      "B": "Gerenciar requisitos.",
+      "C": "Preencher a lacuna entre o problema e a solução.",
+      "D": "Realizar tarefas de manutenção de acordo com os requisitos de sistema.",
+      "E": "Realizar testes de aceitação de fábrica."
+    },
+    "resposta_correta": [
+      "B",
+      "C"
+    ],
+    "explicacao": "As responsabilidades típicas do engenheiro de requisitos incluem gerenciar requisitos (B) e preencher a lacuna entre o problema e a solução (C). Missão empresarial, manutenção e testes de aceitação de fábrica pertencem a outros papéis.",
+    "imagem": null,
+    "print": "C:/Users/filip/Pictures/Screenshots/Simulado 1/Captura de tela 2026-11-23 082204.png"
+  },
+  {
+    "numero": 9,
+    "codigo": "ID-045",
+    "enunciado": "Considere a seguinte tabela com três diferentes visões destacadas de um conjunto de requisitos: Qual visualização representada na figura é considerada uma visão seletiva?",
+    "tipo": "unica",
+    "quantidade_respostas": "1",
+    "alternativas": {
+      "A": "Não há visualização seletiva representada na figura.",
+      "B": "Visualização B",
+      "C": "Visualização C",
+      "D": "Visualização A"
+    },
+    "resposta_correta": "B",
+    "explicacao": "Na figura, a Visualização B filtra um subconjunto de linhas/requisitos por critério (Fonte = Vendas), caracterizando uma visão seletiva. A Visualização A é de projeção (colunas) e a C é agregada (contagens).",
+    "imagem": "C:/Users/filip/Pictures/Screenshots/Simulado 1/Captura de tela 2026-11-23 082235.png",
+    "print": "C:/Users/filip/Pictures/Screenshots/Simulado 1/Captura de tela 2026-11-23 082224.png"
+  },
+  {
+    "numero": 10,
+    "codigo": "ID-035",
+    "enunciado": "Todas as situações a seguir favorecem a adoção de um processo sequencial de ER, EXCETO:",
+    "tipo": "unica",
+    "quantidade_respostas": "1",
+    "alternativas": {
+      "A": "Uma especificação abrangente de requisitos é necessária como base contratual para terceirizar ou licitar o design e a implementação do sistema.",
+      "B": "A capacidade de alterar facilmente os requisitos é importante para o projeto.",
+      "C": "Os stakeholders estão disponíveis, conhecem suas necessidades e podem especificá-las antecipadamente.",
+      "D": "O processo de desenvolvimento do sistema é orientado por planejamento."
+    },
+    "resposta_correta": "B",
+    "explicacao": "A necessidade de alterar requisitos facilmente favorece um processo iterativo/ágil, não um processo sequencial. Base contratual, requisitos estáveis/antecipados e desenvolvimento orientado a planejamento favorecem o processo sequencial.",
+    "imagem": null,
+    "print": "C:/Users/filip/Pictures/Screenshots/Simulado 1/Captura de tela 2026-11-23 082243.png"
+  },
+  {
+    "numero": 11,
+    "codigo": "ID-041",
+    "enunciado": "Considere o seguinte diagrama de classe: Com base no diagrama acima, é correto dizer que:",
+    "tipo": "multipla",
+    "quantidade_respostas": "1 a 5",
+    "alternativas": {
+      "A": "11 trabalhadores podem trabalhar em um único projeto.",
+      "B": "1 gerente pode gerenciar 2 projetos.",
+      "C": "Até 12 trabalhadores estão disponíveis para trabalhar em um determinado número de projetos.",
+      "D": "Pode não haver trabalhadores alocados em um determinado projeto",
+      "E": "1 gerente pode gerenciar 1 único projeto."
+    },
+    "resposta_correta": [
+      "A",
+      "B",
+      "E"
+    ],
+    "explicacao": "Pelas multiplicidades do diagrama: cada Projeto possui de 1 a 12 Trabalhadores (logo 11 trabalhadores podem trabalhar em um único projeto — A é correta e D é falsa, pois há no mínimo 1); cada Gerente gerencia de 1 a 2 Projetos (logo B e E são corretas). C é falsa porque 1..12 vale por projeto, não como total global.",
+    "imagem": "C:/Users/filip/Pictures/Screenshots/Simulado 1/Captura de tela 2026-11-23 082304.png",
+    "print": "C:/Users/filip/Pictures/Screenshots/Simulado 1/Captura de tela 2026-11-23 082258.png"
+  },
+  {
+    "numero": 12,
+    "codigo": "ID-022",
+    "enunciado": "Um requisito é verificável se...",
+    "tipo": "unica",
+    "quantidade_respostas": "1",
+    "alternativas": {
+      "A": "é possível determinar se a implementação atende ao que foi requerido.",
+      "B": "é independente, fornecendo todas as informações necessárias para sua compreensão, implementação e verificação.",
+      "C": "reflete as necessidades genuínas e acordadas das partes interessadas.",
+      "D": "todos os stakeholders o entendem da mesma forma, não deixando espaço para múltiplas interpretações."
+    },
+    "resposta_correta": "A",
+    "explicacao": "Um requisito é verificável quando é possível determinar objetivamente (por teste, inspeção, análise etc.) se a implementação atende ao que foi requerido.",
+    "imagem": null,
+    "print": "C:/Users/filip/Pictures/Screenshots/Simulado 1/Captura de tela 2026-11-23 082310.png"
+  },
+  {
+    "numero": 13,
+    "codigo": "ID-040",
+    "enunciado": "Qual das seguintes medidas deve ser tomada para alterar um requisito que está em estado de rascunho?",
+    "tipo": "unica",
+    "quantidade_respostas": "1",
+    "alternativas": {
+      "A": "Ele deve ser enviado ao Product Owner.",
+      "B": "Ele pode ser alterado à vontade pelo autor.",
+      "C": "Deve ser realizada uma análise de impacto para esclarecer as consequências da mudança.",
+      "D": "Ele deve ser submetido ao Conselho de Controle de Mudanças."
+    },
+    "resposta_correta": "B",
+    "explicacao": "Requisitos em estado de rascunho (draft) ainda não foram formalmente aprovados nem incluídos em baseline, podendo ser alterados livremente pelo próprio autor.",
+    "imagem": null,
+    "print": "C:/Users/filip/Pictures/Screenshots/Simulado 1/Captura de tela 2026-11-23 082315.png"
+  },
+  {
+    "numero": 14,
+    "codigo": "ID-025",
+    "enunciado": "Escolha a sentença correta no que se refere às técnicas de priorização de requisitos:",
+    "tipo": "unica",
+    "quantidade_respostas": "1",
+    "alternativas": {
+      "A": "Nas técnicas ad hoc, as prioridades são atribuídas por especialistas com base na sua própria experiência.",
+      "B": "A priorização de requisitos implica na atribuição de níveis absolutos de importância a cada requisito.",
+      "C": "Todas as outras opções estão erradas.",
+      "D": "Para priorizar requisitos, não importa se eles se encontram em diferentes níveis de abstração"
+    },
+    "resposta_correta": "A",
+    "explicacao": "Nas técnicas ad hoc de priorização, especialistas atribuem prioridades com base na sua própria experiência. A priorização não exige níveis absolutos (pode ser relativa) e deve ser feita entre requisitos no mesmo nível de abstração.",
+    "imagem": null,
+    "print": "C:/Users/filip/Pictures/Screenshots/Simulado 1/Captura de tela 2026-11-23 082321.png"
+  },
+  {
+    "numero": 15,
+    "codigo": "ID-042",
+    "enunciado": "Com relação aos fatores de influência a serem considerados na estruturação de um processo de ER, é correto dizer que:",
+    "tipo": "unica",
+    "quantidade_respostas": "1",
+    "alternativas": {
+      "A": "Um orçamento restrito deve ser compensado por um processo robusto de ER.",
+      "B": "Um projeto de alta complexidade demanda por um processo de ER mais flexível e informal.",
+      "C": "Todas as outras opções estão erradas.",
+      "D": "Engenheiros de requisitos experientes se desempenham melhor com parte de um processo simples de ER."
+    },
+    "resposta_correta": "D",
+    "explicacao": "Engenheiros de requisitos experientes conseguem atuar bem com um processo mais simples/enxuto de ER. Orçamento restrito não se compensa com processo pesado, e alta complexidade exige processo mais rigoroso, não informal.",
+    "imagem": null,
+    "print": "C:/Users/filip/Pictures/Screenshots/Simulado 1/Captura de tela 2026-11-23 082328.png"
+  },
+  {
+    "numero": 16,
+    "codigo": "ID-010",
+    "enunciado": "Escolha as sentenças ERRADAS:",
+    "tipo": "multipla",
+    "quantidade_respostas": "2",
+    "alternativas": {
+      "A": "Os processos e práticas de aplicações anteriores de ER, ainda que bem-sucedidos, nunca devem ser reutilizados.",
+      "B": "A aplicação de ER deve ser sistemática.",
+      "C": "A aplicação da ER deve ser disciplinada.",
+      "D": "Existe uma prática otimizada de ER que funciona bem em todas as situações.",
+      "E": "Os produtos de trabalho devem ser escolhidos de acordo com a situação em questão."
+    },
+    "resposta_correta": [
+      "A",
+      "D"
+    ],
+    "explicacao": "A está errada porque processos e práticas bem-sucedidos devem ser reutilizados/adaptados; D está errada porque não existe uma única prática ótima de ER válida para todas as situações (a ER depende do contexto).",
+    "imagem": null,
+    "print": "C:/Users/filip/Pictures/Screenshots/Simulado 1/Captura de tela 2026-11-23 082336.png"
+  },
+  {
+    "numero": 17,
+    "codigo": "ID-017",
+    "enunciado": "Todas as sentenças a seguir são aplicáveis a modelos, EXCETO:",
+    "tipo": "unica",
+    "quantidade_respostas": "1",
+    "alternativas": {
+      "A": "Um modelo é usado para aumentar a quantidade de informações em relação à realidade, de modo que possamos compreendê-la melhor.",
+      "B": "Os modelos são usados para permitir o enfoque em parte da realidade.",
+      "C": "Um modelo denota uma representação da realidade.",
+      "D": "Modelos são produzidos para uma finalidade específica."
+    },
+    "resposta_correta": "A",
+    "explicacao": "Um modelo reduz/abstrai a complexidade e a quantidade de informações da realidade para focar nos aspectos relevantes a uma finalidade específica — ele não aumenta a quantidade de informações.",
+    "imagem": null,
+    "print": "C:/Users/filip/Pictures/Screenshots/Simulado 1/Captura de tela 2026-11-23 082342.png"
+  },
+  {
+    "numero": 18,
+    "codigo": "ID-018",
+    "enunciado": "Considere a figura a seguir: O diagrama de contexto da figura acima foi elaborado utilizando um:",
+    "tipo": "unica",
+    "quantidade_respostas": "1",
+    "alternativas": {
+      "A": "DFD",
+      "B": "Diagrama de Caso de Uso",
+      "C": "Todas as outras opções estão erradas.",
+      "D": "Diagrama de Estados"
+    },
+    "resposta_correta": "A",
+    "explicacao": "A figura usa a notação clássica de Diagrama de Fluxo de Dados (DFD) em nível de contexto: círculo central representando o sistema, retângulos para entidades externas e setas rotuladas indicando fluxos de dados.",
+    "imagem": "C:/Users/filip/Pictures/Screenshots/Simulado 1/Captura de tela 2026-11-23 082426.png",
+    "print": "C:/Users/filip/Pictures/Screenshots/Simulado 1/Captura de tela 2026-11-23 082414.png"
+  },
+  {
+    "numero": 19,
+    "codigo": "ID-009",
+    "enunciado": "Validação é o processo de...",
+    "tipo": "unica",
+    "quantidade_respostas": "1",
+    "alternativas": {
+      "A": "garantir que um item atenda às necessidades de seus stakeholders.",
+      "B": "prototipagem de sistemas.",
+      "C": "avaliar se os requisitos foram escritos seguindo um determinado critério.",
+      "D": "garantir que um item atenda aos seus requisitos."
+    },
+    "resposta_correta": "A",
+    "explicacao": "Validação garante que o item/requisito atende às necessidades genuínas dos stakeholders ('estamos construindo o produto certo?'). Garantir conformidade com os requisitos especificados é verificação.",
+    "imagem": null,
+    "print": "C:/Users/filip/Pictures/Screenshots/Simulado 1/Captura de tela 2026-11-23 082431.png"
+  },
+  {
+    "numero": 20,
+    "codigo": "ID-034",
+    "enunciado": "Qual das seguintes perspectivas é a mais importante ao se fazer a seleção uma ferramenta para apoiar o processo de ER?",
+    "tipo": "unica",
+    "quantidade_respostas": "1",
+    "alternativas": {
+      "A": "Perspectiva do processo",
+      "B": "Perspectiva do projeto",
+      "C": "Todas as outras opções estão erradas",
+      "D": "Perspectiva do usuário"
+    },
+    "resposta_correta": "C",
+    "explicacao": "No IREB CPRE-FL, nenhuma perspectiva isolada (processo, projeto, usuário, produto, fornecedor, técnica ou econômica) é universalmente a mais importante; todas devem ser avaliadas em conjunto conforme o contexto.",
+    "imagem": null,
+    "print": "C:/Users/filip/Pictures/Screenshots/Simulado 1/Captura de tela 2026-11-23 082436.png"
+  },
+  {
+    "numero": 21,
+    "codigo": "ID-014",
+    "enunciado": "Qual das sentenças a seguir é verdadeira no que se refere aos requisitos baseados em templates?",
+    "tipo": "unica",
+    "quantidade_respostas": "1",
+    "alternativas": {
+      "A": "Templates ajudam a captar as informações mais relevantes.",
+      "B": "Templates melhoram o foco no conteúdo.",
+      "C": "Templates são extremamente flexíveis.",
+      "D": "Templates possuem alta ambiguidade."
+    },
+    "resposta_correta": "A",
+    "explicacao": "Templates atuam como guia/checklist para captar as informações mais relevantes de forma padronizada. Eles reduzem a flexibilidade e a ambiguidade, e podem inclusive desviar o foco do conteúdo para a sintaxe se usados mecanicamente.",
+    "imagem": null,
+    "print": "C:/Users/filip/Pictures/Screenshots/Simulado 1/Captura de tela 2026-11-23 082441.png"
+  },
+  {
+    "numero": 22,
+    "codigo": "ID-038",
+    "enunciado": "No que diz respeito ao suporte de ferramentas para a Engenharia de Requisitos, é correto dizer que:",
+    "tipo": "unica",
+    "quantidade_respostas": "1",
+    "alternativas": {
+      "A": "As ferramentas de escritório são ideais para gerenciar requisitos.",
+      "B": "Ferramentas do tipo “gerenciamento do processo da RE” são utilizadas para gerenciar versões e configurações.",
+      "C": "Todas as outras opções estão erradas.",
+      "D": "Ferramentas do tipo “gestão de requisitos” são utilizadas para medir e reportar a qualidade do produto."
+    },
+    "resposta_correta": "C",
+    "explicacao": "Ferramentas de escritório não são ideais para gerenciar requisitos em escala; gerenciamento de versões/configurações é função de ferramentas de gestão de requisitos (não de processo); e medir/reportar qualidade do produto não é a definição de gestão de requisitos.",
+    "imagem": null,
+    "print": "C:/Users/filip/Pictures/Screenshots/Simulado 1/Captura de tela 2026-11-23 082446.png"
+  },
+  {
+    "numero": 23,
+    "codigo": "ID-027",
+    "enunciado": "Quais dos itens a seguir NÃO se enquadram como fontes principais de requisitos:",
+    "tipo": "multipla",
+    "quantidade_respostas": "1 a 5",
+    "alternativas": {
+      "A": "Regulamentos",
+      "B": "Documentos",
+      "C": "Brainstorming",
+      "D": "Outros sistemas",
+      "E": "Stakeholders"
+    },
+    "resposta_correta": [
+      "A",
+      "C"
+    ],
+    "explicacao": "No IREB CPRE-FL, as três fontes principais de requisitos são Stakeholders, Documentos e Outros sistemas. Brainstorming é uma técnica de elicitação (não fonte) e Regulamentos são um subtipo/exemplo de Documentos.",
+    "imagem": null,
+    "print": "C:/Users/filip/Pictures/Screenshots/Simulado 1/Captura de tela 2026-11-23 082450.png"
+  },
+  {
+    "numero": 24,
+    "codigo": "ID-032",
+    "enunciado": "Quais das opções seguintes NÃO apresentam categorias de técnicas de validação?",
+    "tipo": "multipla",
+    "quantidade_respostas": "2",
+    "alternativas": {
+      "A": "Técnicas de avaliação",
+      "B": "Técnicas de revisão",
+      "C": "Técnicas exploratórias",
+      "D": "Técnicas assertivas",
+      "E": "Desenvolvimento de amostras"
+    },
+    "resposta_correta": [
+      "A",
+      "D"
+    ],
+    "explicacao": "No IREB CPRE-FL, as categorias de técnicas de validação incluem técnicas de revisão, técnicas exploratórias e desenvolvimento de amostras/protótipos. 'Técnicas de avaliação' e 'Técnicas assertivas' não são categorias oficiais.",
+    "imagem": null,
+    "print": "C:/Users/filip/Pictures/Screenshots/Simulado 1/Captura de tela 2026-11-23 082455.png"
+  },
+  {
+    "numero": 25,
+    "codigo": "ID-008",
+    "enunciado": "Escolha a opção que substitui corretamente as variáveis A e B:\nA ER vai além de lidar com requisitos que se referem ao que está dentro do A.\nA ER deve também lidar com requisitos relacionados com o B.",
+    "tipo": "unica",
+    "quantidade_respostas": "1",
+    "alternativas": {
+      "A": "A = limite do sistema\nB = que está fora do contexto do sistema",
+      "B": "A = limite do sistema\nB = contexto do sistema",
+      "C": "A = contexto do sistema\nB = que está fora do contexto do sistema",
+      "D": "A = contexto do sistema\nB = tudo que está além do limite do sistema"
+    },
+    "resposta_correta": "B",
+    "explicacao": "A Engenharia de Requisitos vai além do que está dentro do limite do sistema (A), devendo lidar também com requisitos relacionados ao contexto do sistema (B).",
+    "imagem": null,
+    "print": "C:/Users/filip/Pictures/Screenshots/Simulado 1/Captura de tela 2026-11-23 082501.png"
+  },
+  {
+    "numero": 26,
+    "codigo": "ID-013",
+    "enunciado": "Usar linguagem natural produzir requisitos apresenta as seguintes vantagens, EXCETO:",
+    "tipo": "unica",
+    "quantidade_respostas": "1",
+    "alternativas": {
+      "A": "A linguagem é extremamente expressiva.",
+      "B": "A linguagem é flexível.",
+      "C": "A linguagem é inequívoca.",
+      "D": "A linguagem não requer treinamento para ser compreendida."
+    },
+    "resposta_correta": "C",
+    "explicacao": "A linguagem natural é expressiva, flexível e compreensível sem treinamento formal, mas NÃO é inequívoca — sua principal desvantagem é justamente a ambiguidade.",
+    "imagem": null,
+    "print": "C:/Users/filip/Pictures/Screenshots/Simulado 1/Captura de tela 2026-11-23 082506.png"
+  },
+  {
+    "numero": 27,
+    "codigo": "ID-020",
+    "enunciado": "No que diz respeito aos critérios de qualidade para requisitos, é correto dizer que:",
+    "tipo": "multipla",
+    "quantidade_respostas": "2",
+    "alternativas": {
+      "A": "“Modificável” é um critério de qualidade para requisitos individuais.",
+      "B": "“Não redundante” é um critério de qualidade para requisitos individuais.",
+      "C": "“Rastreável” é um critério de qualidade para requisitos individuais.",
+      "D": "“Consistente” é um critério de qualidade para produtos de trabalho constituídos múltiplos requisitos.",
+      "E": "“Conformidade” é um critério de qualidade para produtos de trabalho que cobre múltiplos requisitos."
+    },
+    "resposta_correta": [
+      "D",
+      "E"
+    ],
+    "explicacao": "No IREB CPRE-FL, 'Consistente' (D) e 'Conformidade' (E) são critérios de qualidade para produtos de trabalho com múltiplos requisitos. 'Modificável', 'Não redundante' e 'Rastreável' também pertencem aos critérios de produtos de trabalho, não de requisitos individuais.",
+    "imagem": null,
+    "print": "C:/Users/filip/Pictures/Screenshots/Simulado 1/Captura de tela 2026-11-23 082511.png"
+  },
+  {
+    "numero": 28,
+    "codigo": "ID-031",
+    "enunciado": "Complete a lacuna:\nUm conflito ______________ surge de posições divergentes mantidas pelas partes envolvidas, moldadas por objetivos pessoais ou responsabilidades específicas da função.",
+    "tipo": "unica",
+    "quantidade_respostas": "1",
+    "alternativas": {
+      "A": "de interesses",
+      "B": "de valor",
+      "C": "estrutural",
+      "D": "de relacionamento"
+    },
+    "resposta_correta": "A",
+    "explicacao": "Um conflito de interesses surge de posições divergentes entre as partes envolvidas, moldadas por objetivos pessoais ou responsabilidades específicas de suas funções.",
+    "imagem": null,
+    "print": "C:/Users/filip/Pictures/Screenshots/Simulado 1/Captura de tela 2026-11-23 082515.png"
+  },
+  {
+    "numero": 29,
+    "codigo": "ID-015",
+    "enunciado": "Escolha a sentença correta em relação aos templates de frases para requisitos:",
+    "tipo": "unica",
+    "quantidade_respostas": "1",
+    "alternativas": {
+      "A": "“Poderia” é usado para requisitos fortemente desejados, mas não obrigatórios.",
+      "B": "“Deverá” é usado para requisitos obrigatórios.",
+      "C": "“irá” é usado para a forma mais forte de requisitos obrigatórios.",
+      "D": "Mesmo requisitos usando “deveria” são obrigatórios."
+    },
+    "resposta_correta": "B",
+    "explicacao": "Nos templates de frases de requisitos (IREB), 'Deverá' (shall) expressa obrigatoriedade legal/contratual; 'Deveria' (should) indica algo fortemente desejado, mas não obrigatório; 'Poderia' (could) indica opcionalidade.",
+    "imagem": null,
+    "print": "C:/Users/filip/Pictures/Screenshots/Simulado 1/Captura de tela 2026-11-23 082519.png"
+  },
+  {
+    "numero": 30,
+    "codigo": "ID-039",
+    "enunciado": "Todas as sentenças a seguir são aplicáveis ao controle de versão em requisitos, EXCETO:",
+    "tipo": "unica",
+    "quantidade_respostas": "1",
+    "alternativas": {
+      "A": "Cada nova versão exige uma descrição clara do que foi alterado em relação à última versão.",
+      "B": "Os números de versão são normalmente compostos por pelo menos 2 componentes: versão e incremento.",
+      "C": "O controle de versão é útil para acompanhar o histórico de evolução de um requisito.",
+      "D": "Os números de versão sempre começam com “1”."
+    },
+    "resposta_correta": "D",
+    "explicacao": "Números de versão NÃO começam necessariamente com '1' — requisitos em rascunho costumam iniciar em '0.x' (ex.: 0.1, 0.2) até atingirem a primeira versão aprovada '1.0'.",
+    "imagem": null,
+    "print": "C:/Users/filip/Pictures/Screenshots/Simulado 1/Captura de tela 2026-11-23 082524.png"
+  },
+  {
+    "numero": 31,
+    "codigo": "ID-033",
+    "enunciado": "Quais das afirmações a seguir apresentam razões para priorizar requisitos?",
+    "tipo": "multipla",
+    "quantidade_respostas": "1 a 4",
+    "alternativas": {
+      "A": "Para identificar requisitos que possam ser aplicáveis em outros contextos.",
+      "B": "Para estabelecer quais requisitos precisam ser testados primeiro.",
+      "C": "Para determinar quais requisitos devem ser incluídos na próxima versão do sistema.",
+      "D": "Para registrar o custo estimado de implementação de um requisito."
+    },
+    "resposta_correta": [
+      "B",
+      "C"
+    ],
+    "explicacao": "Priorizar requisitos ajuda a definir o que entra na próxima versão/release (C) e o que deve ser implementado ou testado primeiro (B). Reutilização em outros contextos (A) e registro de custo estimado (D) não são razões da priorização.",
+    "imagem": null,
+    "print": "C:/Users/filip/Pictures/Screenshots/Simulado 1/Captura de tela 2026-11-23 082529.png"
+  },
+  {
+    "numero": 32,
+    "codigo": "ID-044",
+    "enunciado": "Associar identificadores exclusivos a requisitos é útil para os seguintes propósitos, EXCETO:",
+    "tipo": "unica",
+    "quantidade_respostas": "1",
+    "alternativas": {
+      "A": "Para contar quantos requisitos estão contidos em uma especificação.",
+      "B": "Criar referências a requisitos.",
+      "C": "Para permitir o controle de diferentes configurações.",
+      "D": "Garantir rastreabilidade explícita a outros produtos de trabalho."
+    },
+    "resposta_correta": "A",
+    "explicacao": "Identificadores exclusivos servem para referenciar requisitos, controlar configurações e garantir rastreabilidade, mas NÃO para contar requisitos, pois itens excluídos não devem ter seus IDs reutilizados.",
+    "imagem": null,
+    "print": "C:/Users/filip/Pictures/Screenshots/Simulado 1/Captura de tela 2026-11-23 082534.png"
+  },
+  {
+    "numero": 33,
+    "codigo": "ID-037",
+    "enunciado": "No que diz respeito a configurações e baselines na ER, é INCORRETO dizer que:",
+    "tipo": "unica",
+    "quantidade_respostas": "1",
+    "alternativas": {
+      "A": "Uma baseline é uma configuração estável, validada e controlada por mudanças que sinaliza um marco ou outro tipo de ponto de avaliação no projeto",
+      "B": "Uma configuração sempre possui 2 dimensões: produto e versão.",
+      "C": "Uma configuração deve ser imutável.",
+      "D": "Em um projeto ágil, o sprint backlog não deve ser usado como uma baseline no início da próxima iteração."
+    },
+    "resposta_correta": "D",
+    "explicacao": "Em projetos ágeis, o sprint backlog PODE (e costuma) ser usado como uma baseline leve no início da iteração/sprint. As demais afirmações sobre baseline, dimensões (produto e versão) e imutabilidade estão corretas.",
+    "imagem": null,
+    "print": "C:/Users/filip/Pictures/Screenshots/Simulado 1/Captura de tela 2026-11-23 082539.png"
+  },
+  {
+    "numero": 34,
+    "codigo": "ID-002",
+    "enunciado": "A Engenharia de Requisitos é útil para todos os objetivos a seguir, EXCETO:",
+    "tipo": "unica",
+    "quantidade_respostas": "1",
+    "alternativas": {
+      "A": "Compreender melhor o problema a ser resolvido",
+      "B": "Queimar etapas e ir direto para a construção do sistema",
+      "C": "Redução dos riscos de desenvolvimento",
+      "D": "Produzir uma referência contra a qual o sistema será testado."
+    },
+    "resposta_correta": "B",
+    "explicacao": "A ER visa compreender melhor o problema, reduzir riscos e gerar referência para testes — nunca queimar etapas para ir direto à construção do sistema.",
+    "imagem": null,
+    "print": "C:/Users/filip/Pictures/Screenshots/Simulado 1/Captura de tela 2026-11-23 082544.png"
+  },
+  {
+    "numero": 35,
+    "codigo": "ID-001",
+    "enunciado": "Qual das seguintes opções NÃO apresenta tipos de requisitos?",
+    "tipo": "unica",
+    "quantidade_respostas": "1",
+    "alternativas": {
+      "A": "Restrições",
+      "B": "Requisitos de qualidade",
+      "C": "Requisitos não funcionais",
+      "D": "Requisitos funcionais"
+    },
+    "resposta_correta": "C",
+    "explicacao": "No IREB CPRE-FL v3, os três tipos oficiais de requisitos são: requisitos funcionais, requisitos de qualidade e restrições. O termo 'requisitos não funcionais' foi descontinuado como categoria oficial.",
+    "imagem": null,
+    "print": "C:/Users/filip/Pictures/Screenshots/Simulado 1/Captura de tela 2026-11-23 082547.png"
+  },
+  {
+    "numero": 36,
+    "codigo": "ID-023",
+    "enunciado": "O atributo de um requisito que registra potenciais problemas relacionados à sua implementação, como danos, custos extras, atrasos e ações judiciais é denominado:",
+    "tipo": "unica",
+    "quantidade_respostas": "1",
+    "alternativas": {
+      "A": "Risco",
+      "B": "Fonte",
+      "C": "Justificativa",
+      "D": "Dificuldade"
+    },
+    "resposta_correta": "A",
+    "explicacao": "O atributo 'Risco' registra potenciais problemas associados à implementação de um requisito, como danos, custos extras, atrasos e ações judiciais.",
+    "imagem": null,
+    "print": "C:/Users/filip/Pictures/Screenshots/Simulado 1/Captura de tela 2026-11-23 082551.png"
+  },
+  {
+    "numero": 37,
+    "codigo": "ID-029",
+    "enunciado": "De acordo com o modelo Kano, uma funcionalidade explicitamente solicitada pelos clientes é chamada de:",
+    "tipo": "unica",
+    "quantidade_respostas": "1",
+    "alternativas": {
+      "A": "Crítica",
+      "B": "Fator de excitação",
+      "C": "Obrigatória",
+      "D": "Esperada"
+    },
+    "resposta_correta": "D",
+    "explicacao": "No modelo Kano, funcionalidades explicitamente solicitadas pelos clientes são os fatores de desempenho/esperados (Esperada). Obrigatórias/básicas são implícitas e fatores de excitação surpreendem sem terem sido pedidos.",
+    "imagem": null,
+    "print": "C:/Users/filip/Pictures/Screenshots/Simulado 1/Captura de tela 2026-11-23 082556.png"
+  },
+  {
+    "numero": 38,
+    "codigo": "ID-006",
+    "enunciado": "Quais dos fatores a seguir são considerados facilitadores para o entendimento compartilhado?",
+    "tipo": "multipla",
+    "quantidade_respostas": "2",
+    "alternativas": {
+      "A": "Confiança mútua informada",
+      "B": "Terceirização",
+      "C": "Equipes grandes e diversificadas",
+      "D": "Distância geográfica",
+      "E": "Normas específicas de domínio"
+    },
+    "resposta_correta": [
+      "A",
+      "E"
+    ],
+    "explicacao": "Confiança mútua informada (A) e normas específicas de domínio (E) são facilitadores do entendimento compartilhado. Terceirização, equipes grandes/diversificadas e distância geográfica atuam como obstáculos.",
+    "imagem": null,
+    "print": "C:/Users/filip/Pictures/Screenshots/Simulado 1/Captura de tela 2026-11-23 082600.png"
+  },
+  {
+    "numero": 39,
+    "codigo": "ID-021",
+    "enunciado": "Complete a frase a seguir com a opção correta.\nO critério de qualidade _________________ estabelece que um requisito deve enquadrar-se no escopo relevante do sistema, de modo a contribuir para cumprir pelo menos um objetivo ou necessidade das partes interessadas.",
+    "tipo": "unica",
+    "quantidade_respostas": "1",
+    "alternativas": {
+      "A": "“conformidade”",
+      "B": "“rastreável”",
+      "C": "“necessário”",
+      "D": "“adequado”"
+    },
+    "resposta_correta": "C",
+    "explicacao": "O critério 'necessário' determina que o requisito deve estar dentro do escopo relevante do sistema e contribuir para satisfazer pelo menos um objetivo ou necessidade das partes interessadas.",
+    "imagem": null,
+    "print": "C:/Users/filip/Pictures/Screenshots/Simulado 1/Captura de tela 2026-11-23 082604.png"
+  },
+  {
+    "numero": 40,
+    "codigo": "ID-016",
+    "enunciado": "O modelo “Quando <em um estado específico> o <nome do sistema> deve <resposta do sistema>” é adequado para:",
+    "tipo": "unica",
+    "quantidade_respostas": "1",
+    "alternativas": {
+      "A": "Requisitos orientados a estado",
+      "B": "Requisitos onipresentes",
+      "C": "Requisitos para comportamentos indesejados",
+      "D": "Requisitos acionados por eventos"
+    },
+    "resposta_correta": "A",
+    "explicacao": "O padrão EARS 'Quando <em um estado específico> o <nome do sistema> deve <resposta do sistema>' é usado especificamente para requisitos orientados a estado (state-driven).",
+    "imagem": null,
+    "print": "C:/Users/filip/Pictures/Screenshots/Simulado 1/Captura de tela 2026-11-23 082609.png"
+  },
+  {
+    "numero": 41,
+    "codigo": "ID-003",
+    "enunciado": "Qual das alternativas a seguir apresenta uma tarefa principal da Engenharia de Requisitos?",
+    "tipo": "unica",
+    "quantidade_respostas": "1",
+    "alternativas": {
+      "A": "Verificação de requisitos",
+      "B": "Suporte da ER por meio de ferramenta específica",
+      "C": "Validação de requisitos",
+      "D": "Redação de requisitos"
+    },
+    "resposta_correta": "C",
+    "explicacao": "As quatro tarefas principais da ER no IREB são: elicitação, documentação, validação (e negociação) e gerenciamento de requisitos. Logo, 'Validação de requisitos' é a opção correta.",
+    "imagem": null,
+    "print": "C:/Users/filip/Pictures/Screenshots/Simulado 1/Captura de tela 2026-11-23 082613.png"
+  },
+  {
+    "numero": 42,
+    "codigo": "ID-028",
+    "enunciado": "Escolha a opção que completa corretamente a seguinte frase:\nA técnica de elicitação “_______________” baseia-se em traçar paralelos para facilitar o raciocínio e a geração de ideias. A sua eficácia depende em grande parte da escolha de um ponto de referência apropriado para o problema em questão.",
+    "tipo": "unica",
+    "quantidade_respostas": "1",
+    "alternativas": {
+      "A": "Analogia",
+      "B": "Protótipos",
+      "C": "Cenários e storyboards",
+      "D": "Comparação"
+    },
+    "resposta_correta": "A",
+    "explicacao": "A técnica de elicitação por Analogia baseia-se em traçar paralelos com outros domínios ou situações de referência para estimular o raciocínio e a geração de ideias.",
+    "imagem": null,
+    "print": "C:/Users/filip/Pictures/Screenshots/Simulado 1/Captura de tela 2026-11-23 082617.png"
+  },
+  {
+    "numero": 43,
+    "codigo": "ID-036",
+    "enunciado": "Um processo de ER orientado ao produto é normalmente escolhido quando uma organização está desenvolvendo um sistema como um produto ou serviço para o mercado. Na maioria dos casos, um processo de ER orientado ao produto traz consigo um processo ágil de desenvolvimento.\nAlém de ser iterativo, este tipo de processo de ER também deve ser:",
+    "tipo": "unica",
+    "quantidade_respostas": "1",
+    "alternativas": {
+      "A": "Prescritivo e orientado para o mercado.",
+      "B": "Exploratório e Orientado ao Cliente.",
+      "C": "Prescritivo e orientado ao cliente.",
+      "D": "Exploratório e orientado para o mercado."
+    },
+    "resposta_correta": "D",
+    "explicacao": "Um processo de ER orientado ao produto, voltado ao mercado e combinado com desenvolvimento ágil, é iterativo, exploratório e orientado para o mercado.",
+    "imagem": null,
+    "print": "C:/Users/filip/Pictures/Screenshots/Simulado 1/Captura de tela 2026-11-23 082622.png"
+  },
+  {
+    "numero": 44,
+    "codigo": "ID-043",
+    "enunciado": "É correto dizer que os requisitos de domínio...",
+    "tipo": "unica",
+    "quantidade_respostas": "1",
+    "alternativas": {
+      "A": "... estabelecem as propriedades de domínio para um sistema sociotécnico ou ciberfísico.",
+      "B": "... são um subconjunto do domínio dos stakeholders, como os requisitos do usuário.",
+      "C": "... possuem foco nas metas de negócios, objetivos e necessidades de domínio de uma organização.",
+      "D": "... não estão descritos de maneira correta nas outras opções."
+    },
+    "resposta_correta": "A",
+    "explicacao": "No IREB CPRE-FL, requisitos de domínio estabelecem as propriedades de domínio exigidas para um sistema sociotécnico ou ciberfísico.",
+    "imagem": null,
+    "print": "C:/Users/filip/Pictures/Screenshots/Simulado 1/Captura de tela 2026-11-23 082627.png"
+  },
+  {
+    "numero": 45,
+    "codigo": "ID-019",
+    "enunciado": "Quais das alternativas a seguir NÃO apresenta um tipo principal de protótipos?",
+    "tipo": "multipla",
+    "quantidade_respostas": "1 a 5",
+    "alternativas": {
+      "A": "Protótipos evolutivos",
+      "B": "Protótipos de teste",
+      "C": "Protótipos exploratórios",
+      "D": "Protótipos simulacionais",
+      "E": "Protótipos experimentais"
+    },
+    "resposta_correta": [
+      "B",
+      "D"
+    ],
+    "explicacao": "No IREB CPRE-FL, os três tipos principais de protótipos são: exploratórios, evolutivos e experimentais. 'Protótipos de teste' (B) e 'Protótipos simulacionais' (D) não são tipos principais oficiais.",
+    "imagem": null,
+    "print": "C:/Users/filip/Pictures/Screenshots/Simulado 1/Captura de tela 2026-11-23 082631.png"
+  }
+]

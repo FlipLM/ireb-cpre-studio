@@ -1,0 +1,7 @@
+node_modules/
+.next/
+data/cpre-studio.db
+data/cpre-studio.db-shm
+data/cpre-studio.db-wal
+.env.local
+.env

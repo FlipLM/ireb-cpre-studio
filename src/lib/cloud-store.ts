@@ -1174,7 +1174,7 @@ export async function cloudGetDashboardAnalytics(supabase: SupabaseClient) {
               : `Última questão estudada: #${q?.numero ?? ''} (${lastAttempt.question_codigo})`,
             subtitle: nextUnanswered
               ? `${unansweredUnique} questão(ões) ainda não respondida(s) no banco`
-              : 'Você já respondeu todas as 45 questões ao menos uma vez',
+              : `Você já respondeu todas as ${totalQuestions} questões ao menos uma vez`,
             href: nextUnanswered
               ? `/estudar?codigo=${nextUnanswered.codigo}`
               : `/estudar?codigo=${lastAttempt.question_codigo}`,

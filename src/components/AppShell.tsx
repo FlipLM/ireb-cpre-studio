@@ -252,7 +252,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               Nuvem Supabase
             </div>
             <div className="text-xs font-medium text-zinc-800 mt-0.5 truncate">
-              {userEmail ?? '45 questões IREB CPRE-FL'}
+              {userEmail ?? '225 questões IREB CPRE-FL'}
             </div>
             {userEmail ? (
               <button

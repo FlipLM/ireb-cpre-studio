@@ -200,13 +200,13 @@ export default function SimuladosPage() {
 
           <div>
             <label className="block text-xs font-medium text-zinc-700 mb-1.5">
-              Quantidade de questões ({questionCount} de 45)
+              Quantidade de questões ({questionCount} de 225)
             </label>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <input
                 type="range"
                 min={1}
-                max={45}
+                max={225}
                 value={questionCount}
                 onChange={(e) => setQuestionCount(Number(e.target.value))}
                 className="flex-1 accent-zinc-900"
@@ -215,8 +215,16 @@ export default function SimuladosPage() {
                 type="button"
                 onClick={() => setQuestionCount(45)}
                 className="px-2.5 py-1.5 rounded-lg text-xs font-medium border border-zinc-200 text-zinc-700 hover:bg-zinc-50 shrink-0"
+                title="Tamanho de uma prova oficial IREB (45 questões)"
               >
-                Todas (45)
+                Prova (45)
+              </button>
+              <button
+                type="button"
+                onClick={() => setQuestionCount(225)}
+                className="px-2.5 py-1.5 rounded-lg text-xs font-medium border border-zinc-200 text-zinc-700 hover:bg-zinc-50 shrink-0"
+              >
+                Todas (225)
               </button>
             </div>
           </div>
@@ -278,7 +286,7 @@ export default function SimuladosPage() {
                     : 'bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-50'
                 )}
               >
-                Sequencial (#1..45)
+                Sequencial (#1..225)
               </button>
             </div>
           </div>

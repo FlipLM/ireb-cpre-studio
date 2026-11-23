@@ -48,22 +48,22 @@ describe('Plataforma IREB CPRE-FL — Integridade do Banco, Correção e Persist
     }
   });
 
-  it('importa integralmente as 45 questões de questoes.json preservando todos os campos originais', () => {
+  it('importa integralmente as 225 questões de questoes.json preservando todos os campos originais', () => {
     const rawText = fs.readFileSync(SOURCE_JSON_PATH, 'utf8');
     const report = importQuestionsFromJsonText(rawText, 'questoes.json', MEDIA_DIR);
 
     expect(report.valid).toBe(true);
-    expect(report.totalInFile).toBe(45);
-    expect(report.importedCount).toBe(45);
-    expect(report.unicaCount).toBe(35);
-    expect(report.multiplaCount).toBe(10);
-    expect(report.withImageCount).toBe(3);
+    expect(report.totalInFile).toBe(225);
+    expect(report.importedCount).toBe(225);
+    expect(report.unicaCount).toBe(169);
+    expect(report.multiplaCount).toBe(56);
+    expect(report.withImageCount).toBe(11);
     expect(report.missingImageCount).toBe(0);
     expect(report.duplicateCodes).toHaveLength(0);
 
     const exported = exportOriginalQuestionsJson();
     const originalParsed = JSON.parse(rawText);
-    expect(exported).toHaveLength(45);
+    expect(exported).toHaveLength(225);
     expect(exported).toEqual(originalParsed);
   });
 
@@ -130,10 +130,10 @@ describe('Plataforma IREB CPRE-FL — Integridade do Banco, Correção e Persist
     // Reimporta o JSON
     const reimport = importQuestionsFromJsonText(rawText, 'questoes-v2.json', MEDIA_DIR);
     expect(reimport.importedCount).toBe(0);
-    expect(reimport.updatedCount).toBe(45);
+    expect(reimport.updatedCount).toBe(225);
 
     const all = listQuestionsWithProgress();
-    expect(all).toHaveLength(45);
+    expect(all).toHaveLength(225);
 
     const detail = getQuestionDetail('ID-030');
     expect(detail?.attempts).toHaveLength(1);

@@ -392,7 +392,7 @@ function StudyWorkspace() {
             href="/estudar"
             className="px-4 py-2 rounded-lg bg-zinc-900 text-white text-sm font-medium hover:bg-zinc-800"
           >
-            Estudar todas as 45 questões
+            Estudar todas as 225 questões
           </Link>
           <Link
             href="/"

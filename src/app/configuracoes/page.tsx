@@ -8,6 +8,7 @@ import {
   Download,
   Image as ImageIcon,
   Save,
+  Smartphone,
   Sparkles,
   Upload,
 } from 'lucide-react';
@@ -35,9 +36,29 @@ interface SettingsResponse {
   questionsWithImages: QuestionWithProgress[];
 }
 
+interface AndroidProfessorState {
+  enabled: boolean;
+  hasPermission: boolean;
+  targetQuestions: number;
+  windowMinutes: number;
+  testStressMode: boolean;
+}
+
+interface AndroidProfessorBridge {
+  getStateJson?: () => string;
+  toggleOverlay?: () => void;
+  saveSettings?: (targetQuestions: number, windowMinutes: number, testStressMode: boolean) => void;
+}
+
 export default function ConfiguracoesPage() {
   const [data, setData] = useState<SettingsResponse | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const [androidState, setAndroidState] = useState<AndroidProfessorState | null>(null);
+  const [androidTarget, setAndroidTarget] = useState(10);
+  const [androidWindow, setAndroidWindow] = useState(120);
+  const [androidTestStress, setAndroidTestStress] = useState(false);
+  const [androidSavedMsg, setAndroidSavedMsg] = useState<string | null>(null);
 
   const [errorStreak, setErrorStreak] = useState(2);
   const [minTopicAnswers, setMinTopicAnswers] = useState(2);
@@ -69,6 +90,48 @@ export default function ConfiguracoesPage() {
   useEffect(() => {
     void loadSettings();
   }, [loadSettings]);
+
+  const syncAndroidState = useCallback(() => {
+    if (typeof window === 'undefined') return;
+    const bridge = (window as unknown as { AndroidProfessor?: AndroidProfessorBridge })
+      .AndroidProfessor;
+    if (!bridge?.getStateJson) return;
+    try {
+      const parsed = JSON.parse(bridge.getStateJson()) as AndroidProfessorState;
+      setAndroidState(parsed);
+      setAndroidTarget(parsed.targetQuestions ?? 10);
+      setAndroidWindow(parsed.windowMinutes ?? 120);
+      setAndroidTestStress(Boolean(parsed.testStressMode));
+    } catch {
+      // ignora erro de parse
+    }
+  }, []);
+
+  useEffect(() => {
+    syncAndroidState();
+    const handler = () => syncAndroidState();
+    window.addEventListener('android-professor-state', handler);
+    return () => window.removeEventListener('android-professor-state', handler);
+  }, [syncAndroidState]);
+
+  const handleToggleAndroidOverlay = () => {
+    const bridge = (window as unknown as { AndroidProfessor?: AndroidProfessorBridge })
+      .AndroidProfessor;
+    bridge?.toggleOverlay?.();
+    setTimeout(syncAndroidState, 200);
+  };
+
+  const handleSaveAndroidOverlaySettings = () => {
+    const bridge = (window as unknown as { AndroidProfessor?: AndroidProfessorBridge })
+      .AndroidProfessor;
+    bridge?.saveSettings?.(
+      Math.max(1, androidTarget),
+      Math.max(5, androidWindow),
+      androidTestStress
+    );
+    setAndroidSavedMsg('Preferências do Professor Flutuante salvas.');
+    setTimeout(syncAndroidState, 150);
+  };
 
   const handleSaveSettings = async () => {
     setSavingSettings(true);
@@ -169,6 +232,106 @@ export default function ConfiguracoesPage() {
           seus dados pessoais de aprendizagem (Camada 2).
         </p>
       </div>
+
+      {/* 0. Professor Flutuante (App Android) */}
+      {androidState && (
+        <section
+          id="android-professor-settings-card"
+          className="bg-white rounded-2xl border border-indigo-200/90 p-5 sm:p-6 space-y-4 shadow-xs"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <Smartphone className="w-4 h-4 text-indigo-600" />
+              <h2 className="text-base font-semibold text-zinc-950">
+                Professor Flutuante na Tela (Android)
+              </h2>
+            </div>
+            <span
+              className={
+                androidState.enabled
+                  ? 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200'
+                  : 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-zinc-100 text-zinc-600 border border-zinc-200'
+              }
+            >
+              {androidState.enabled ? 'Ativado sobre outros apps' : 'Desativado'}
+            </span>
+          </div>
+
+          <p className="text-xs text-zinc-600 leading-relaxed">
+            Mantém o Prof. IREB flutuando sobre qualquer aplicativo do celular. Se você ficar{' '}
+            <strong>{Math.round(androidWindow / 60)}h</strong> sem responder pelo menos{' '}
+            <strong>{androidTarget} questões</strong>, ele começa a se estressar — basta tocar nele
+            para abrir o modo estudo.
+          </p>
+
+          <button
+            type="button"
+            onClick={handleToggleAndroidOverlay}
+            className={
+              androidState.enabled
+                ? 'w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-rose-600 text-white text-xs font-semibold hover:bg-rose-700 transition-colors'
+                : 'w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700 transition-colors'
+            }
+          >
+            {androidState.enabled
+              ? 'Desativar Professor Flutuante'
+              : 'Ativar Professor Flutuante na Tela'}
+          </button>
+
+          <div className="grid grid-cols-2 gap-3 pt-2 border-t border-zinc-100">
+            <label className="space-y-1">
+              <span className="block text-[11px] font-medium text-zinc-600">
+                Meta de questões
+              </span>
+              <input
+                type="number"
+                min={1}
+                max={100}
+                value={androidTarget}
+                onChange={(e) => setAndroidTarget(Number(e.target.value) || 10)}
+                className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm text-zinc-900"
+              />
+            </label>
+            <label className="space-y-1">
+              <span className="block text-[11px] font-medium text-zinc-600">
+                Janela (min — 120 = 2h)
+              </span>
+              <input
+                type="number"
+                min={5}
+                max={720}
+                value={androidWindow}
+                onChange={(e) => setAndroidWindow(Number(e.target.value) || 120)}
+                className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm text-zinc-900"
+              />
+            </label>
+          </div>
+
+          <label className="flex items-center gap-2.5 text-xs text-zinc-700 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={androidTestStress}
+              onChange={(e) => setAndroidTestStress(e.target.checked)}
+              className="rounded border-zinc-300 text-indigo-600"
+            />
+            Testar modo estressado agora (simula 2h sem estudar)
+          </label>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={handleSaveAndroidOverlaySettings}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-zinc-900 text-white text-xs font-medium hover:bg-zinc-800"
+            >
+              <Save className="w-3.5 h-3.5" />
+              Salvar regras do Professor
+            </button>
+            {androidSavedMsg && (
+              <span className="text-xs text-emerald-700 font-medium">{androidSavedMsg}</span>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* 1. Saúde do Banco de Questões */}
       <section className="bg-white rounded-2xl border border-zinc-200/90 p-5 sm:p-6 space-y-4">

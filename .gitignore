@@ -5,3 +5,7 @@ data/cpre-studio.db-shm
 data/cpre-studio.db-wal
 .env.local
 .env
+android-app/.gradle/
+android-app/app/build/
+android-app/build/
+android-app/local.properties

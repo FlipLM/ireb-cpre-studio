@@ -14,8 +14,8 @@ export interface GeminiGenerateResult {
 }
 
 const DEFAULT_MODEL_CANDIDATES = [
-  'gemini-3.5-flash-lite',
   'gemini-flash-lite-latest',
+  'gemini-3.5-flash-lite',
   'gemini-3-flash-preview',
   'gemini-3.1-flash-lite',
 ];
@@ -79,6 +79,7 @@ export async function generateWithGemini(params: {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
+      signal: AbortSignal.timeout(12000),
     });
 
     if (response.status === 404 || response.status === 503 || response.status === 429) {

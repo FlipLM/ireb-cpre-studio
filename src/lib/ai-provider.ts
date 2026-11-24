@@ -23,10 +23,8 @@ const CEREBRAS_MODELS = [
   { id: 'gpt-oss-120b', label: 'Cerebras • GPT-OSS 120B' },
 ];
 
-// Somente modelos explicitamente ":free" / "openrouter/free" (custo $0.00 garantido)
+// Somente roteador/modelos explicitamente ":free" / "openrouter/free" (custo $0.00 garantido)
 const OPENROUTER_FREE_MODELS = [
-  { id: 'meta-llama/llama-3.3-70b-instruct:free', label: 'OpenRouter • Llama 3.3 (Free)' },
-  { id: 'google/gemma-3-27b-it:free', label: 'OpenRouter • Gemma 3 (Free)' },
   { id: 'openrouter/free', label: 'OpenRouter • Auto Free' },
 ];
 
@@ -98,6 +96,7 @@ async function callOpenAICompatible(params: {
       ...(params.extraHeaders ?? {}),
     },
     body: JSON.stringify(body),
+    signal: AbortSignal.timeout(12000),
   });
 
   if (!res.ok) {
@@ -256,9 +255,10 @@ export async function generateWithFreeCascade(params: {
     }
   }
 
+  const configuredList = getConfiguredAIProviders();
   throw new Error(
     errors.length > 0
-      ? `Todos os provedores gratuitos estão temporariamente ocupados. Tente novamente em alguns segundos.`
+      ? `Nenhum provedor respondeu agora (ativos no servidor: ${configuredList.join(', ') || 'nenhum'}). Detalhe: ${errors.slice(0, 3).join(' | ')}`
       : 'Nenhuma chave de IA gratuita configurada no servidor.'
   );
 }

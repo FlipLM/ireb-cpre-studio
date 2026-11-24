@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
     const [windowRes, latestRes] = await Promise.all([
       supabase
         .from('user_attempts')
-        .select('id, created_at', { count: 'exact' })
+        .select('question_codigo, created_at')
         .gte('created_at', cutoffIso)
         .order('created_at', { ascending: false }),
       supabase
@@ -43,7 +43,12 @@ export async function GET(request: NextRequest) {
     if (windowRes.error) throw new Error(windowRes.error.message);
     if (latestRes.error) throw new Error(latestRes.error.message);
 
-    const answeredInWindow = windowRes.count ?? windowRes.data?.length ?? 0;
+    const uniqueQuestions = new Set(
+      (windowRes.data ?? [])
+        .map((row: { question_codigo?: string | null }) => row.question_codigo)
+        .filter((code): code is string => Boolean(code))
+    );
+    const answeredInWindow = uniqueQuestions.size;
     const remaining = Math.max(0, targetQuestions - answeredInWindow);
     const goalMet = answeredInWindow >= targetQuestions;
 

@@ -4,6 +4,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { DEFAULT_APP_SETTINGS } from '@/lib/db';
 import { computeMasteryLevel, computeNextSpacedReview, evaluateAnswer } from '@/lib/evaluation';
 import { generateWithFreeCascade, isAnyFreeAIConfigured } from '@/lib/ai-provider';
+import { retrieveOfficialIrebKnowledge } from '@/lib/ireb-knowledge';
 import { DEFAULT_QUESTION_TOPIC_MAP, DEFAULT_TOPICS } from '@/lib/taxonomy';
 import { normalizeAnswerSet } from '@/lib/evaluation';
 import type {
@@ -1432,9 +1433,20 @@ export async function cloudGenerateComplementaryExplanation(
 
   if (isAnyFreeAIConfigured()) {
     try {
+      const knowledge = await retrieveOfficialIrebKnowledge({
+        supabase,
+        topicId: q.progress.topicId,
+        questionText: `${q.enunciado} ${Object.values(q.alternativas).join(' ')}`,
+        maxChunks: 3,
+      });
+
       const prompt = [
         'Você é um tutor didático de Engenharia de Requisitos (IREB CPRE-FL).',
+        'Consulte PRIMEIRO a base oficial IREB CPRE-FL abaixo como fonte primária de verdade.',
         'Responda estritamente em JSON com as chaves: conceptSummary, distractorsAnalysis, memoryTip, practicalExample.',
+        '',
+        knowledge.promptBlock,
+        '',
         `Código: ${q.codigo}`,
         `Enunciado: ${q.enunciado}`,
         `Alternativas: ${JSON.stringify(q.alternativas)}`,

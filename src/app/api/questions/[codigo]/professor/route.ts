@@ -7,6 +7,7 @@ import {
   isAnyFreeAIConfigured,
   type AIMessage,
 } from '@/lib/ai-provider';
+import { retrieveOfficialIrebKnowledge } from '@/lib/ireb-knowledge';
 import { loadProfessorSkill } from '@/lib/professor-skill';
 import type { QuestionWithProgress } from '@/types/domain';
 
@@ -136,6 +137,13 @@ export async function POST(
 
     const questionContext = buildQuestionContext(question, alreadySubmitted);
     const skill = loadProfessorSkill();
+    const knowledge = await retrieveOfficialIrebKnowledge({
+      supabase,
+      topicId: question.progress.topicId,
+      questionText: `${question.enunciado} ${Object.values(question.alternativas).join(' ')}`,
+      userQuestion,
+      maxChunks: action === 'ask' ? 4 : 3,
+    });
 
     const runtimeDirective =
       action === 'hint'
@@ -145,7 +153,7 @@ export async function POST(
             '- action: hint (Pedir dica)',
             `- hintLevel: ${hintLevel} de 3`,
             `- alreadySubmitted: ${alreadySubmitted}`,
-            'Siga rigorosamente a skill acima, dando pontos-chave que o aluno deve lembrar para responder sozinho, SEM entregar a resposta.',
+            'Siga rigorosamente a skill acima e a BASE OFICIAL IREB CPRE-FL abaixo, dando pontos-chave que o aluno deve lembrar para responder sozinho, SEM entregar a resposta.',
           ].join('\n')
         : [
             '---',
@@ -153,11 +161,11 @@ export async function POST(
             '- action: ask (Pergunta aberta — Modo Aula Liberal)',
             `- alreadySubmitted: ${alreadySubmitted}`,
             alreadySubmitted
-              ? 'O aluno JÁ confirmou a resposta: pode ensinar a teoria e discutir o gabarito abertamente.'
-              : 'O aluno AINDA NÃO respondeu, mas quer aprender o conteúdo teórico completo para interpretar e responder sozinho. Ensine a teoria de forma completa e didática (sem dizer explicitamente qual letra marcar).',
+              ? 'O aluno JÁ confirmou a resposta: pode ensinar a teoria com base na BASE OFICIAL IREB CPRE-FL abaixo e discutir o gabarito abertamente.'
+              : 'O aluno AINDA NÃO respondeu, mas quer aprender o conteúdo teórico completo para interpretar e responder sozinho. Use a BASE OFICIAL IREB CPRE-FL abaixo como fonte primária e ensine a teoria de forma completa e didática (sem dizer explicitamente qual letra marcar).',
           ].join('\n');
 
-    const systemInstruction = `${skill.content}\n\n${runtimeDirective}`;
+    const systemInstruction = `${skill.content}\n\n${knowledge.promptBlock}\n\n${runtimeDirective}`;
 
     const messages: AIMessage[] = [];
 
@@ -195,6 +203,7 @@ export async function POST(
       reply: result.text,
       provider: result.provider,
       model: result.displayLabel,
+      sources: knowledge.sources,
       usedFallback: false,
       needsApiKey: false,
     });

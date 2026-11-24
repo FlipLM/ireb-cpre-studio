@@ -403,7 +403,11 @@ export function ProfessorCompanion({
   // Estado interativo de IA do Professor
   const [aiReply, setAiReply] = useState<string | null>(null);
   const [aiBadge, setAiBadge] = useState<string | null>(null);
-  const [aiMeta, setAiMeta] = useState<{ model?: string; usedFallback?: boolean } | null>(null);
+  const [aiMeta, setAiMeta] = useState<{
+    model?: string;
+    usedFallback?: boolean;
+    sources?: Array<{ id: string; eu: string; title: string }>;
+  } | null>(null);
   const [aiLoading, setAiLoading] = useState<'hint' | 'ask' | null>(null);
   const [aiError, setAiError] = useState<string | null>(null);
   const [hintLevel, setHintLevel] = useState(0);
@@ -694,6 +698,7 @@ export function ProfessorCompanion({
       const data = (await res.json()) as {
         reply?: string;
         model?: string;
+        sources?: Array<{ id: string; eu: string; title: string }>;
         usedFallback?: boolean;
         error?: string;
       };
@@ -705,7 +710,7 @@ export function ProfessorCompanion({
       setBubbleExpanded(false);
       setAiReply(data.reply);
       setAiBadge(nextLevel > 1 ? `DICA #${nextLevel}` : 'DICA DO PROF.');
-      setAiMeta({ model: data.model, usedFallback: data.usedFallback });
+      setAiMeta({ model: data.model, usedFallback: data.usedFallback, sources: data.sources });
     } catch (err) {
       setAiError(err instanceof Error ? err.message : 'Erro ao pedir dica.');
     } finally {
@@ -740,6 +745,7 @@ export function ProfessorCompanion({
       const data = (await res.json()) as {
         reply?: string;
         model?: string;
+        sources?: Array<{ id: string; eu: string; title: string }>;
         usedFallback?: boolean;
         error?: string;
       };
@@ -757,7 +763,7 @@ export function ProfessorCompanion({
       setBubbleExpanded(data.reply.length > 350);
       setAiReply(data.reply);
       setAiBadge('RESPOSTA DO PROF.');
-      setAiMeta({ model: data.model, usedFallback: data.usedFallback });
+      setAiMeta({ model: data.model, usedFallback: data.usedFallback, sources: data.sources });
     } catch (err) {
       setAiError(err instanceof Error ? err.message : 'Erro ao enviar pergunta.');
     } finally {
@@ -1017,6 +1023,21 @@ export function ProfessorCompanion({
                     isTyping={isTyping}
                     tone={bubbleTone}
                   />
+                  {aiMeta?.sources && aiMeta.sources.length > 0 && aiReply && !aiLoading && (
+                    <div className="mt-3 pt-2.5 border-t border-zinc-200/70 flex flex-wrap items-center gap-1.5">
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
+                        Base Oficial IREB:
+                      </span>
+                      {aiMeta.sources.map((src) => (
+                        <span
+                          key={src.id}
+                          className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium bg-emerald-50 text-emerald-800 border border-emerald-200/80"
+                        >
+                          {src.eu} • {src.title}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {aiError && (
@@ -1259,6 +1280,22 @@ export function ProfessorCompanion({
               isTyping={isTyping}
               tone={bubbleTone}
             />
+
+            {aiMeta?.sources && aiMeta.sources.length > 0 && aiReply && !aiLoading && (
+              <div className="mt-3 pt-2.5 border-t border-zinc-200/70 flex flex-wrap items-center gap-1.5">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
+                  Base Oficial IREB:
+                </span>
+                {aiMeta.sources.map((src) => (
+                  <span
+                    key={src.id}
+                    className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium bg-emerald-50 text-emerald-800 border border-emerald-200/80"
+                  >
+                    {src.eu} • {src.title}
+                  </span>
+                ))}
+              </div>
+            )}
 
             {!lastAskedQuestion && activeMessage.length > 260 && !aiLoading && (
               <div className="mt-2.5 pt-2 border-t border-zinc-200/60 flex justify-end">

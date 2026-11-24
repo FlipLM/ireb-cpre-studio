@@ -1,0 +1,146 @@
+[
+  {
+    "id": "eu1-fundamentos-definicao",
+    "eu": "EU 1",
+    "title": "Introdução, Definição de Requisito e Tarefas da ER",
+    "topicIds": ["fundamentos-er"],
+    "keywords": ["requisito", "definição", "engenharia de requisitos", "tarefas", "atividades", "papel", "engenheiro de requisitos", "ieee", "comunicação", "habilidades"],
+    "content": "No IREB CPRE-FL (EU 1), um requisito é: (1) uma necessidade percebida por um stakeholder; (2) uma capacidade ou propriedade que um sistema deve apresentar; ou (3) uma representação documentada de uma necessidade, capacidade ou propriedade. A Engenharia de Requisitos (ER) é uma abordagem sistemática e disciplinada para a especificação e o gerenciamento de requisitos com os objetivos de: conhecer os requisitos relevantes, alcançar consenso entre stakeholders, documentar segundo padrões e gerenciar sistematicamente. As 4 atividades principais da ER são: Elicitação, Documentação, Validação/Negociação e Gerenciamento. O Engenheiro de Requisitos precisa de habilidades analíticas, empatia, comunicação, moderação, resolução de conflitos e capacidade de abstração."
+  },
+  {
+    "id": "eu1-tipos-requisitos",
+    "eu": "EU 1",
+    "title": "Os 3 Tipos de Requisitos (Funcionais, Qualidade e Restrições)",
+    "topicIds": ["fundamentos-er", "documentacao-qualidade"],
+    "keywords": ["funcional", "funcionais", "qualidade", "não funcional", "restrição", "restrições", "constraint", "desempenho", "usabilidade", "segurança", "domínio", "sistema"],
+    "content": "O IREB CPRE-FL classifica os requisitos em 3 categorias principais: (1) Requisitos Funcionais — dizem respeito ao resultado ou comportamento que deve ser fornecido por uma função do sistema (dados, comportamento, funções); (2) Requisitos de Qualidade (não funcionais) — especificam qualidades desejadas do sistema ou de suas funções (ex.: desempenho, confiabilidade, usabilidade, segurança, manutenibilidade, portabilidade, conforme ISO/IEC 25010); (3) Restrições (Constraints) — requisitos que limitam o espaço de solução além do necessário para atender requisitos funcionais e de qualidade (ex.: restrições técnicas, organizacionais, legais/regulatórias, de prazo ou orçamento). Atenção: restrições NÃO são negociáveis como requisitos funcionais comuns e restringem como o sistema deve ser construído ou operado."
+  },
+  {
+    "id": "eu1-contexto-limite-escopo",
+    "eu": "EU 1",
+    "title": "Ambiente, Contexto do Sistema, Limite do Sistema e Escopo",
+    "topicIds": ["fundamentos-er", "modelagem-prototipacao"],
+    "keywords": ["contexto", "ambiente", "limite do sistema", "limite do contexto", "escopo", "fronteira", "zona cinzenta", "irrelevante", "moldado", "projetado"],
+    "content": "No IREB CPRE-FL, a relação entre o sistema e seu entorno segue definições rigorosas: (1) Sistema (Escopo do Sistema) — aquilo que pode ser moldado/projetado e desenvolvido durante o desenvolvimento; (2) Limite do Sistema (System Boundary) — separa o sistema que será desenvolvido do seu contexto (define o que faz parte do sistema e o que está fora); (3) Contexto do Sistema — é a parte relevante do ambiente do sistema que influencia o sistema ou seus requisitos (ex.: usuários, outros sistemas, processos de negócio, leis, hardware externo). NÃO é sinônimo de ambiente completo; (4) Limite do Contexto (Context Boundary) — separa o contexto relevante da parte irrelevante do ambiente; (5) Zona Cinzenta — áreas inicialmente incertas sobre pertencerem ao sistema ou ao contexto, que devem ser esclarecidas durante a ER."
+  },
+  {
+    "id": "eu2-nove-principios",
+    "eu": "EU 2",
+    "title": "Os 9 Princípios Fundamentais da Engenharia de Requisitos",
+    "topicIds": ["fundamentos-er"],
+    "keywords": ["princípios", "nove", "9", "valor", "stakeholders", "partes interessadas", "entendimento compartilhado", "contexto", "problema", "solução", "validação", "evolução", "inovação", "sistemático", "disciplinado", "meio", "fim"],
+    "content": "A Unidade Educacional 2 (EU 2) do Syllabus oficial IREB CPRE-FL define exatamente 9 Princípios Fundamentais da Engenharia de Requisitos: 1. Orientação a Valor: requisitos são um MEIO para atingir um fim (gerar valor), nunca um fim em si mesmos. 2. Partes Interessadas (Stakeholders): a ER trata de satisfazer as necessidades e desejos das partes interessadas. 3. Entendimento Compartilhado: não é possível desenvolver um sistema com sucesso sem uma base comum de entendimento (explícito e implícito). 4. Contexto: sistemas não podem ser compreendidos de maneira isolada; dependem do seu contexto. 5. Problema – Requisito – Solução: formam uma tríade inevitavelmente entrelaçada. 6. Validação: requisitos não validados são inúteis. 7. Evolução: mudanças nos requisitos não são acidentes, mas o caso normal. 8. Inovação: mais do mesmo não basta; a ER deve estimular inovação. 9. Trabalho Sistemático e Disciplinado: não se pode prescindir de trabalho sistemático e disciplinado na ER."
+  },
+  {
+    "id": "eu2-entendimento-compartilhado",
+    "eu": "EU 2",
+    "title": "Entendimento Compartilhado (Explícito vs Implícito) e Glossário",
+    "topicIds": ["fundamentos-er", "documentacao-qualidade"],
+    "keywords": ["entendimento compartilhado", "explícito", "implícito", "falso entendimento", "glossário", "terminologia", "homônimos", "sinônimos"],
+    "content": "No princípio de Entendimento Compartilhado (EU 2), o IREB distingue: Entendimento Compartilhado Explícito (alcançado mediante avaliação/validação de requisitos documentados, especificações, protótipos) e Entendimento Compartilhado Implícito (baseado em conhecimento prévio comum, cultura, domínio ou experiência compartilhada da equipe). O 'Falso Entendimento Compartilhado' ocorre quando pessoas acreditam concordar, mas interpretam termos de maneiras diferentes — é um dos maiores riscos de projeto. Um Glossário é um produto de trabalho essencial para eliminar ambiguidades terminológicas (sinônimos e homônimos) e construir base comum."
+  },
+  {
+    "id": "eu3-produtos-trabalho-abstracao",
+    "eu": "EU 3",
+    "title": "Produtos de Trabalho, Níveis de Abstração e Nível de Detalhamento",
+    "topicIds": ["documentacao-qualidade"],
+    "keywords": ["produto de trabalho", "work product", "abstração", "nível de abstração", "detalhamento", "nível de detalhamento", "liberdade", "custo", "benefício", "risco", "feedback"],
+    "content": "Na EU 3 do IREB CPRE-FL, Produtos de Trabalho (Work Products) são artefatos que registram requisitos (ex.: especificação de requisitos, backlog, glossário, modelos, protótipos). Níveis de Abstração: em produtos pequenos, os requisitos devem permanecer no mesmo nível de abstração; em produtos grandes, níveis diferentes devem ser organizados por estruturação clara — misturar níveis de abstração sem estrutura é sempre má prática. Nível de Detalhamento: deve ser MAIOR quando há maior benefício/criticidade, maior risco, menor familiaridade da equipe com o contexto, menor disponibilidade de feedback dos stakeholders ou contratos formais. À medida que o detalhamento aumenta: o custo da especificação aumenta, a liberdade dos desenvolvedores diminui e o risco de interpretações erradas diminui (mas o custo do sistema em si não necessariamente aumenta apenas pelo detalhamento, e a especificação fica mais difícil de manter)."
+  },
+  {
+    "id": "eu3-linguagem-natural-templates",
+    "eu": "EU 3",
+    "title": "Linguagem Natural, Efeitos Transformacionais, Verbos Modais e Templates",
+    "topicIds": ["documentacao-qualidade"],
+    "keywords": ["linguagem natural", "template", "frase", "verbo modal", "deve", "deveria", "pode", "nominalização", "passiva", "voz passiva", "quantificadores universais", "ambiguidade", "ears", "user story", "história de usuário"],
+    "content": "Requisitos em linguagem natural sofrem riscos linguísticos (efeitos transformacionais): nominalização (transformar processo/verbo em substantivo ocultando quem faz o quê), voz passiva (omite o ator/sujeito), verbos incompletamente especificados, condições incompletas, quantificadores universais ('todos', 'sempre', 'nunca') e adjetivos vagos ('rápido', 'amigável'). Para mitigar, usam-se Templates de Frase (como o template IREB/Sophist ou EARS) e User Stories ('Como <papel>, eu quero <objetivo> para que <benefício>'). Verbos modais expressam obrigatoriedade jurídica/contratual: DEVE (obrigatório / mandatório), DEVERIA (recomendado / altamente desejável), PODE (opcional / futuro)."
+  },
+  {
+    "id": "eu3-criterios-qualidade",
+    "eu": "EU 3",
+    "title": "Critérios de Qualidade de Requisitos Individuais e de Produtos de Trabalho",
+    "topicIds": ["documentacao-qualidade", "validacao-verificacao"],
+    "keywords": ["qualidade", "critérios", "adequado", "necessário", "não ambíguo", "completo", "compreensível", "verificável", "consistente", "modificável", "rastreável", "conforme", "individual", "conjunto"],
+    "content": "O IREB CPRE-FL separa critérios de qualidade para: (A) Requisitos Individuais — Adequado (atende necessidade real), Necessário (sem ele há lacuna), Não ambíguo (única interpretação), Completo (contém toda informação necessária), Compreensível (entendido pelo público-alvo), Verificável/Testável (pode-se comprovar se foi atendido); (B) Conjunto de Requisitos / Produtos de Trabalho — Consistente (sem contradições internas ou externas), Não redundante, Completo (cobre tudo que é relevante), Modificável (fácil de alterar sem perder consistência), Rastreável (origem e impacto rastreáveis) e Conforme (segue padrões/templates definidos)."
+  },
+  {
+    "id": "eu3-modelagem-diagramas",
+    "eu": "EU 3",
+    "title": "Modelagem de Requisitos: Perspectivas e Diagramas (Contexto, DFD, Classe, Atividade, Estado, Casos de Uso)",
+    "topicIds": ["modelagem-prototipacao"],
+    "keywords": ["modelo", "modelagem", "diagrama", "contexto", "dfd", "fluxo de dados", "caso de uso", "use case", "classe", "multiplicidade", "atividade", "estado", "máquina de estados", "sequência", "perspectiva", "dados", "funcional", "comportamental"],
+    "content": "Na EU 3 do IREB, um modelo é uma representação abstrata de uma realidade existente ou a ser criada, focada em aspectos relevantes. A modelagem cobre 3 perspectivas principais: (1) Perspectiva de Dados/Informação — Diagrama de Classes UML e Modelo Entidade-Relacionamento (classes, atributos, associações e multiplicidades como 0..1, 1..*, *); (2) Perspectiva Funcional — Diagramas de Casos de Uso (atores, casos de uso, include/extend, limite do sistema) e Diagramas de Fluxo de Dados (DFD — processos, fluxos, depósitos de dados e entidades externas, muito usado como Diagrama de Contexto); (3) Perspectiva Comportamental — Diagramas de Máquina de Estados (estados, transições, eventos, guardas, ações) e Diagramas de Atividade / BPMN (fluxos de processo, decisões, paralelismo)."
+  },
+  {
+    "id": "eu3-prototipacao",
+    "eu": "EU 3",
+    "title": "Protótipos: Exploratórios vs Evolutivos e Graus de Fidelidade",
+    "topicIds": ["modelagem-prototipacao", "validacao-verificacao"],
+    "keywords": ["protótipo", "prototipação", "exploratório", "descartável", "evolutivo", "wireframe", "mockup", "fidelidade", "baixa fidelidade", "alta fidelidade", "papel"],
+    "content": "O IREB CPRE-FL distingue 2 propósitos principais de protótipos: (1) Protótipo Exploratório (descartável / throw-away) — usado para criar entendimento compartilhado, esclarecer requisitos incertos ou validar ideias de interface; após cumprir seu papel, é descartado e NÃO vira o sistema final; (2) Protótipo Evolutivo — serve como base/piloto que evolui iterativamente até se tornar o sistema produtivo final (exige maior qualidade arquitetural). Quanto à fidelidade: Baixa fidelidade (esboços em papel, wireframes — rápidos, baratos, focam estrutura e fluxo) vs Alta fidelidade (mockups interativos ou protótipos nativos — mais próximos do produto final, porém mais caros e podem induzir stakeholders a achar que o sistema já está pronto)."
+  },
+  {
+    "id": "eu4-fontes-stakeholders",
+    "eu": "EU 4",
+    "title": "Fontes de Requisitos e Gerenciamento de Stakeholders",
+    "topicIds": ["elicitacao-conflitos"],
+    "keywords": ["fonte", "fontes", "stakeholder", "parte interessada", "documentos", "sistemas existentes", "lista de stakeholders", "relevância", "disponibilidade", "influência"],
+    "content": "Na EU 4 do IREB CPRE-FL, existem 3 categorias principais de Fontes de Requisitos: (1) Stakeholders (pessoas ou organizações que têm influência direta ou indireta sobre os requisitos do sistema — usuários, clientes, operadores, reguladores, desenvolvedores, testadores); (2) Documentos (leis, normas, manuais, contratos, relatórios de erros, especificações anteriores); (3) Sistemas Existentes (sistemas legados, concorrentes ou sistemas vizinhos no contexto). É essencial manter uma lista de stakeholders com papel, contato, disponibilidade, relevância, área de conhecimento e objetivos/interesses."
+  },
+  {
+    "id": "eu4-tecnicas-elicitacao",
+    "eu": "EU 4",
+    "title": "Técnicas de Elicitação de Requisitos (Pesquisa, Observação, Criatividade, Suporte)",
+    "topicIds": ["elicitacao-conflitos"],
+    "keywords": ["elicitação", "técnicas", "entrevista", "questionário", "observação", "aprendizagem", "arqueologia", "brainstorming", "analogia", "workshop", "design thinking", "perspectiva", "pesquisa", "criatividade"],
+    "content": "O IREB organiza as técnicas de elicitação conforme o tipo de conhecimento a descobrir: (1) Técnicas de Pesquisa (Survey) — entrevistas, questionários (boas para requisitos conscientes/explícitos); (2) Técnicas de Observação — observação de campo e aprendizagem/apprenticeship (essenciais para descobrir requisitos subconscientes/tácitos que o usuário faz automaticamente sem saber explicar); (3) Técnicas de Criatividade — brainstorming, técnica de analogia, mudança de perspectiva, workshops criativos (ideais para inovação e fatores de encantamento); (4) Técnicas Baseadas em Documentos/Artefatos — arqueologia de sistemas, reutilização de requisitos, leitura baseada em perspectivas. A escolha da técnica depende de fatores humanos, organizacionais, de domínio e de contexto."
+  },
+  {
+    "id": "eu4-modelo-kano",
+    "eu": "EU 4",
+    "title": "Modelo de Kano (Básicos, Desempenho e Encantamento)",
+    "topicIds": ["elicitacao-conflitos"],
+    "keywords": ["kano", "básico", "básicos", "implícito", "desempenho", "explícito", "encantamento", "excitement", "delighters", "satisfação", "insatisfação", "subconsciente"],
+    "content": "O Modelo de Kano (EU 4) classifica requisitos segundo seu impacto na satisfação do cliente: (1) Fatores Básicos / Dissatisfiers (requisitos implícitos/subconscientes) — o cliente assume como óbvios; se estiverem ausentes geram grande insatisfação, mas atendê-los além do esperado não gera satisfação extra (elicitados via observação/arqueologia); (2) Fatores de Desempenho / Satisfiers (requisitos explícitos/conscientes) — satisfação cresce linearmente quanto melhor forem atendidos (elicitados via entrevistas/questionários); (3) Fatores de Encantamento / Delighters (requisitos inovadores/inconscientes) — o cliente não espera, mas quando presentes geram grande satisfação e diferencial competitivo (elicitados via criatividade/protótipos). Com o tempo, fatores de encantamento migram para desempenho e depois viram básicos."
+  },
+  {
+    "id": "eu4-conflitos-resolucao",
+    "eu": "EU 4",
+    "title": "Tipos de Conflitos de Requisitos e Técnicas de Resolução",
+    "topicIds": ["elicitacao-conflitos"],
+    "keywords": ["conflito", "conflitos", "resolução", "acordo", "agreement", "compromisso", "compromise", "votação", "voting", "definição de variantes", "variantes", "sobreposição", "imposição", "overruling", "ganha-ganha", "prolongados", "duradouros"],
+    "content": "Conflitos de requisitos ocorrem por interesses divergentes, dados diferentes, valores, relações ou estruturas. O IREB CPRE-FL apresenta técnicas de resolução de conflitos: (1) Acordo (Agreement / ganha-ganha) — busca solução colaborativa que satisfaz todas as partes; tende a produzir os efeitos MAIS PROLONGADOS e duradouros; (2) Compromisso (Compromise) — cada parte cede um pouco para chegar a um meio-termo; (3) Votação (Voting) — decisão pela maioria (rápida, mas pode deixar minorias insatisfeitas); (4) Definição de Variantes — atende interesses diferentes parametrizando/configurando variantes do sistema; (5) Sobreposição / Imposição (Overruling) — uma autoridade hierárquica decide (rápida, porém gera menor aceitação e efeitos menos duradouros). Técnicas auxiliares: matriz de decisão, análise de prós e contras, considerar todos os fatos."
+  },
+  {
+    "id": "eu5-processo-estrutura-trabalho",
+    "eu": "EU 5",
+    "title": "Processo de ER: Linear vs Iterativo, Orientado a Projeto vs Produto e 3 Facetas",
+    "topicIds": ["processos-ferramentas"],
+    "keywords": ["processo", "linear", "sequencial", "iterativo", "ágil", "orientado a produto", "orientado a projeto", "facetas", "tempo", "propósito", "público-alvo", "fatores de influência", "configuração"],
+    "content": "Na EU 5 do IREB CPRE-FL, não existe um processo único de ER ideal para tudo; o processo deve ser configurado considerando fatores de influência (contexto, domínio, criticidade, volatilidade, cultura, contratos, distribuição da equipe). O IREB define 3 Facetas principais de um processo de ER: (1) Faceta de Tempo — Linear/Sequencial (requisitos especificados antes da implementação) vs Iterativo (requisitos refinados em ciclos curtos); (2) Faceta de Propósito — Exploratório (descobrir o que construir) vs Prescritivo (especificar contratualmente com precisão); (3) Faceta de Público-Alvo — Orientado ao Cliente (sob encomenda/projeto) vs Orientado ao Mercado (produto para múltiplos clientes). Combinações típicas: Participativo (ágil/iterativo), Contratual (linear/prescritivo) e Orientado a Produto (iterativo/mercado)."
+  },
+  {
+    "id": "eu6-gerenciamento-atributos-visoes-priorizacao",
+    "eu": "EU 6",
+    "title": "Gerenciamento de Requisitos: Atributos, IDs, Visões e Priorização",
+    "topicIds": ["gerenciamento-requisitos"],
+    "keywords": ["gerenciamento", "atributo", "atributos", "id", "identificador", "exclusivo", "visão", "visões", "view", "priorização", "moscow", "kano", "ranking", "100 dólares", "risco", "ciclo de vida", "rascunho", "status"],
+    "content": "Na EU 6 do IREB CPRE-FL, Gerenciamento de Requisitos garante que requisitos permaneçam controláveis ao longo de todo o ciclo de vida. Elementos-chave: (1) Identificador Exclusivo (ID único e imutável) — permite referenciar e rastrear cada requisito sem ambiguidade; (2) Atributos de Requisitos — metadados como ID, nome, descrição, versão, autor, fonte, estabilidade, risco, prioridade, status do ciclo de vida (ex.: rascunho/draft, em revisão, aprovado, implementado, rejeitado); (3) Visões (Views) — subconjuntos filtrados/ordenados de requisitos adaptados a um stakeholder específico (ex.: visão apenas de segurança ou de alta prioridade); (4) Priorização — técnicas ad-hoc (ranking, top-ten, MoSCoW: Must/Should/Could/Won't, 100 dólares) e analíticas (matriz valor vs custo/risco, Wiegers, AHP)."
+  },
+  {
+    "id": "eu6-rastreabilidade-versao-baseline-mudancas",
+    "eu": "EU 6",
+    "title": "Rastreabilidade, Versionamento, Configurações, Baselines e Gestão de Mudanças",
+    "topicIds": ["gerenciamento-requisitos"],
+    "keywords": ["rastreabilidade", "pré-er", "pós-er", "baseline", "linha de base", "configuração", "versão", "versionamento", "mudança", "ccb", "comitê", "change control board", "impacto", "análise de impacto"],
+    "content": "Na EU 6 do IREB: (1) Rastreabilidade (Traceability) — capacidade de seguir a vida de um requisito em duas direções: Pré-ER (para trás até a fonte/stakeholder/objetivo de negócio que originou o requisito), Pós-ER (para frente até arquitetura, código, casos de teste e documentação) e Entre Requisitos (dependências, refinamentos, conflitos); (2) Versionamento — histórico de alterações de um requisito individual (versões principais e secundárias); (3) Configuração — conjunto consistente de versões específicas de produtos de trabalho/requisitos; (4) Baseline (Linha de Base) — uma configuração estável, revisada e formalmente aprovada que serve como referência para trabalho posterior e controle de mudanças; (5) Gestão de Mudanças — solicitações de mudança passam por análise de impacto (custo, prazo, risco, outros requisitos) e decisão (frequentemente por um CCB — Change Control Board)."
+  },
+  {
+    "id": "eu7-validacao-verificacao-ferramentas",
+    "eu": "EU 7",
+    "title": "Validação vs Verificação, Técnicas de Validação e Ferramentas de ER",
+    "topicIds": ["validacao-verificacao", "processos-ferramentas"],
+    "keywords": ["validação", "verificação", "revisão", "inspeção", "walkthrough", "comentário", "checklist", "perspectiva", "pbr", "ferramenta", "ferramentas", "seleção", "introdução", "piloto"],
+    "content": "Distinção clássica do IREB CPRE-FL: Validação verifica se estamos construindo o 'sistema certo' (se os requisitos atendem às reais necessidades e desejos dos stakeholders e ao contexto); Verificação verifica se estamos construindo o 'sistema corretamente' (se os requisitos/artefatos cumprem critérios formais de qualidade, padrões, consistência e especificações anteriores). Técnicas de Validação: Revisões informais/comentários, Walkthrough (autor conduz a leitura), Inspeção (mais formal, com papéis definidos como moderador, leitor, inspetores, checklists e métricas), Leitura Baseada em Perspectivas (PBR), Prototipação e derivação de casos de teste. Ferramentas de ER (EU 7): apoiam documentação, rastreabilidade, versionamento, visões e gestão de mudanças, mas NÃO substituem um bom processo nem a competência do engenheiro; antes de introduzir uma ferramenta, deve-se definir o processo, levantar requisitos da ferramenta, avaliar opções e realizar um projeto piloto."
+  }
+]

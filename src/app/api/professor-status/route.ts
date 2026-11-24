@@ -83,6 +83,21 @@ export async function GET(request: NextRequest) {
       message = `${answeredInWindow}/${targetQuestions} questões feitas. Continue assim!`;
     }
 
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    const realtime =
+      session?.access_token &&
+      process.env.NEXT_PUBLIC_SUPABASE_URL &&
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+        ? {
+            url: process.env.NEXT_PUBLIC_SUPABASE_URL.trim(),
+            anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.trim(),
+            accessToken: session.access_token,
+          }
+        : null;
+
     return NextResponse.json({
       windowMinutes,
       targetQuestions,
@@ -95,6 +110,7 @@ export async function GET(request: NextRequest) {
       stressed,
       message,
       checkedAt: new Date().toISOString(),
+      realtime,
     });
   } catch (error) {
     return NextResponse.json(

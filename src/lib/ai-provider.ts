@@ -7,7 +7,7 @@ export interface AIMessage {
 
 export interface AIGenerateResult {
   text: string;
-  provider: 'groq' | 'openrouter' | 'gemini';
+  provider: 'groq' | 'cerebras' | 'openrouter' | 'gemini';
   model: string;
   displayLabel: string;
 }
@@ -16,6 +16,11 @@ const GROQ_FREE_MODELS = [
   { id: 'qwen/qwen3.8-27b', label: 'Groq • Qwen 3.8 27B' },
   { id: 'openai/gpt-oss-120b', label: 'Groq • GPT-OSS 120B' },
   { id: 'openai/gpt-oss-20b', label: 'Groq • GPT-OSS 20B' },
+];
+
+const CEREBRAS_MODELS = [
+  { id: 'qwen-3.8-27b', label: 'Cerebras • Qwen 3.8 27B' },
+  { id: 'gpt-oss-120b', label: 'Cerebras • GPT-OSS 120B' },
 ];
 
 // Somente modelos explicitamente ":free" / "openrouter/free" (custo $0.00 garantido)
@@ -29,17 +34,27 @@ export function isGroqConfigured(): boolean {
   return Boolean((process.env.GROQ_API_KEY || '').trim());
 }
 
+export function isCerebrasConfigured(): boolean {
+  return Boolean((process.env.CEREBRAS_API_KEY || '').trim());
+}
+
 export function isOpenRouterConfigured(): boolean {
   return Boolean((process.env.OPENROUTER_API_KEY || '').trim());
 }
 
 export function isAnyFreeAIConfigured(): boolean {
-  return isGroqConfigured() || isOpenRouterConfigured() || isGeminiConfigured();
+  return (
+    isGroqConfigured() ||
+    isCerebrasConfigured() ||
+    isOpenRouterConfigured() ||
+    isGeminiConfigured()
+  );
 }
 
 export function getConfiguredAIProviders(): string[] {
   const list: string[] = [];
   if (isGroqConfigured()) list.push('Groq');
+  if (isCerebrasConfigured()) list.push('Cerebras');
   if (isOpenRouterConfigured()) list.push('OpenRouter (Free)');
   if (isGeminiConfigured()) list.push('Gemini');
   return list;
@@ -154,7 +169,37 @@ export async function generateWithFreeCascade(params: {
     }
   }
 
-  // 2. OpenRouter (STRICTLY :free models only)
+  // 2. Cerebras
+  const cerebrasKey = (process.env.CEREBRAS_API_KEY || '').trim();
+  if (cerebrasKey) {
+    for (const m of CEREBRAS_MODELS) {
+      try {
+        const res = await callOpenAICompatible({
+          endpoint: 'https://api.cerebras.ai/v1/chat/completions',
+          apiKey: cerebrasKey,
+          model: m.id,
+          systemInstruction: params.systemInstruction,
+          messages: params.messages,
+          temperature,
+          maxTokens,
+          jsonMode,
+        });
+        if (res.ok) {
+          return {
+            text: res.text,
+            provider: 'cerebras',
+            model: m.id,
+            displayLabel: m.label,
+          };
+        }
+        errors.push(`Cerebras(${m.id}): ${res.status}`);
+      } catch (e) {
+        errors.push(`Cerebras(${m.id}): ${e instanceof Error ? e.message : 'erro'}`);
+      }
+    }
+  }
+
+  // 3. OpenRouter (STRICTLY :free models only)
   const openRouterKey = (process.env.OPENROUTER_API_KEY || '').trim();
   if (openRouterKey) {
     for (const m of OPENROUTER_FREE_MODELS) {

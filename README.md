@@ -24,7 +24,7 @@ Transforme **225 questões oficiais comentadas**, **simulados cronometrados**, *
   <img src="https://img.shields.io/badge/PWA-Mobile_Ready-8b5cf6?style=flat-square" alt="PWA" />
 </p>
 
-[✨ Funcionalidades](#-funcionalidades-principais) • [⚔️ Módulo RPG](#️-módulo-rpg--jornada-do-herói) • [🧠 Arquitetura](#-arquitetura--performance-local-first--swr) • [🚀 Como Rodar](#-como-rodar-localmente) • [📚 Docs](#-documentação-técnica)
+[✨ Funcionalidades](#-funcionalidades-principais) • [📸 Prints](#-prints-da-plataforma) • [⚔️ Módulo RPG](#️-módulo-rpg--jornada-do-herói) • [🧠 Arquitetura](#-arquitetura--performance-local-first--swr) • [🚀 Como Rodar](#-como-rodar-localmente) • [📚 Docs](#-documentação-técnica)
 
 </div>
 
@@ -49,6 +49,37 @@ O **CPRE Studio** resolve isso unindo **ciência de aprendizagem** (revisão esp
 | 🔁 **Revisão de Erros & Espaçada** | `/revisao` | Fila inteligente que só remove uma questão errada quando você atinge a meta de acertos consecutivos, além da agenda de revisão espaçada. |
 | 📈 **Relatórios & Domínio** | `/relatorios` | Gráficos temporais (Recharts), histórico de simulados e Mapa de Domínio por assunto do Syllabus IREB. |
 | 🗄️ **Banco Completo & Favoritas** | `/questoes` `/favoritas` | Busca instantânea por código, enunciado, assunto, status ou questões com diagramas/imagens. |
+
+---
+
+## 📸 Prints da Plataforma
+
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <img src="docs/screenshots/ireb-dashboard.png" alt="CPRE Studio — Visão Geral (Home SWR)" width="100%" /><br/>
+      <strong>📊 Visão Geral (Home — SWR 0ms)</strong><br/>
+      <sub>Cobertura do banco, taxa de acertos, recomendações reais e desempenho por assunto</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/screenshots/ireb-estudar.png" alt="CPRE Studio — Modo Estudo com Prof. IREB" width="100%" /><br/>
+      <strong>📖 Modo Estudo + Prof. IREB (Pixel Art + RAG)</strong><br/>
+      <sub>Questões comentadas, tutoria sem spoiler e base oficial do Syllabus IREB</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <img src="docs/screenshots/ireb-simulados.png" alt="CPRE Studio — Simulados Cronometrados" width="100%" /><br/>
+      <strong>⏱️ Simulados Cronometrados</strong><br/>
+      <sub>Configurador flexível com gabarito bloqueado durante a prova</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/screenshots/ireb-relatorios.png" alt="CPRE Studio — Relatórios e Mapa de Domínio" width="100%" /><br/>
+      <strong>📈 Relatórios & Mapa de Domínio</strong><br/>
+      <sub>Evolução temporal, domínio por tópico e histórico detalhado</sub>
+    </td>
+  </tr>
+</table>
 
 ---
 

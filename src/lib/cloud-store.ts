@@ -39,11 +39,11 @@ function resolveStaticImageUrl(codigo: string, imagem: string | null): {
   const ext = path.extname(imagem) || '.png';
   const byCode = `${codigo}${ext}`;
   if (fs.existsSync(path.join(mediaDir, byCode))) {
-    return { managedImageUrl: `/media/questoes/${encodeURIComponent(byCode)}`, imageMissing: false };
+    return { managedImageUrl: `/media/questoes/${encodeURIComponent(byCode)}?v=2`, imageMissing: false };
   }
   const byBase = path.basename(imagem);
   if (fs.existsSync(path.join(mediaDir, byBase))) {
-    return { managedImageUrl: `/media/questoes/${encodeURIComponent(byBase)}`, imageMissing: false };
+    return { managedImageUrl: `/media/questoes/${encodeURIComponent(byBase)}?v=2`, imageMissing: false };
   }
   return { managedImageUrl: null, imageMissing: true };
 }

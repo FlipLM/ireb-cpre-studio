@@ -6,7 +6,7 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: 'CPRE Studio',
     description:
       'Plataforma mobile de estudos, simulados e tutoria com o Prof. IREB para certificação IREB CPRE-FL.',
-    start_url: '/estudar',
+    start_url: '/',
     display: 'standalone',
     orientation: 'portrait',
     background_color: '#fafafa',

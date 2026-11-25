@@ -11,6 +11,7 @@ import {
   Clock,
   Flame,
   Play,
+  RefreshCw,
   Sparkles,
   Target,
   TrendingUp,
@@ -50,46 +51,102 @@ interface DashboardData {
   recommendations: StudyRecommendation[];
 }
 
+const DASHBOARD_CACHE_KEY = 'cpre_dashboard_cache_v1';
+let memoryDashboardCache: DashboardData | null = null;
+
+function readCachedDashboard(): DashboardData | null {
+  if (memoryDashboardCache) return memoryDashboardCache;
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.localStorage.getItem(DASHBOARD_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as DashboardData;
+    if (parsed && parsed.summary && typeof parsed.summary.totalQuestions === 'number') {
+      memoryDashboardCache = parsed;
+      return parsed;
+    }
+  } catch {
+    // ignora cache corrompido
+  }
+  return null;
+}
+
+function writeCachedDashboard(data: DashboardData) {
+  memoryDashboardCache = data;
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(DASHBOARD_CACHE_KEY, JSON.stringify(data));
+  } catch {
+    // ignora erro de quota
+  }
+}
+
 export default function DashboardPage() {
-  const [data, setData] = useState<DashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<DashboardData | null>(() => memoryDashboardCache);
+  const [syncing, setSyncing] = useState(true);
 
   useEffect(() => {
-    fetch('/api/dashboard')
-      .then((r) => r.json())
-      .then((d) => setData(d))
-      .finally(() => setLoading(false));
+    let active = true;
+
+    // 1. Hidratação instantânea do localStorage (Stale-While-Revalidate)
+    const cached = readCachedDashboard();
+    if (cached && active) {
+      setData(cached);
+    }
+
+    // 2. Revalidação silenciosa no Supabase em segundo plano após a tela abrir
+    fetch('/api/dashboard', { cache: 'no-store' })
+      .then(async (r) => {
+        if (!r.ok) return null;
+        return (await r.json()) as DashboardData;
+      })
+      .then((fresh) => {
+        if (active && fresh && fresh.summary) {
+          writeCachedDashboard(fresh);
+          setData(fresh);
+        }
+      })
+      .catch(() => {
+        /* mantém dados em cache caso a rede falhe */
+      })
+      .finally(() => {
+        if (active) setSyncing(false);
+      });
+
+    return () => {
+      active = false;
+    };
   }, []);
 
-  if (loading || !data) {
-    return (
-      <div className="space-y-6 animate-pulse">
-        <div className="h-9 w-72 bg-zinc-200 rounded-lg" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-28 bg-white border border-zinc-200 rounded-2xl" />
-          ))}
-        </div>
-        <div className="h-64 bg-white border border-zinc-200 rounded-2xl" />
-      </div>
-    );
-  }
-
-  const { summary, continueActivity, bestTopics, attentionTopics, recommendations } = data;
-  const hasHistory = summary.totalAttempts > 0 || summary.completedExamsCount > 0;
+  const summary = data?.summary ?? null;
+  const continueActivity = data?.continueActivity ?? null;
+  const bestTopics = data?.bestTopics ?? [];
+  const attentionTopics = data?.attentionTopics ?? [];
+  const recommendations = data?.recommendations ?? [];
+  const hasHistory = summary
+    ? summary.totalAttempts > 0 || summary.completedExamsCount > 0
+    : false;
   const coveragePercent =
-    summary.totalQuestions > 0
+    summary && summary.totalQuestions > 0
       ? Math.round((summary.answeredUnique / summary.totalQuestions) * 100)
       : 0;
 
   return (
     <div className="space-y-8">
-      {/* Cabeçalho */}
+      {/* Cabeçalho — renderiza imediatamente em 0ms */}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-zinc-950">
-            Visão Geral
-          </h1>
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-zinc-950">
+              Visão Geral
+            </h1>
+            {syncing && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-zinc-100 border border-zinc-200/80 text-[11px] font-medium text-zinc-500">
+                <RefreshCw className="w-3 h-3 animate-spin" />
+                {data ? 'Sincronizando...' : 'Carregando dados...'}
+              </span>
+            )}
+          </div>
           <p className="text-sm text-zinc-500 mt-1">
             Acompanhamento real da sua preparação para o IREB CPRE Foundation Level.
           </p>
@@ -111,6 +168,22 @@ export default function DashboardPage() {
           </Link>
         </div>
       </div>
+
+      {!summary ? (
+        <div className="space-y-6 animate-pulse">
+          <div className="h-28 bg-white border border-zinc-200 rounded-2xl" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-28 bg-white border border-zinc-200 rounded-2xl" />
+            ))}
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="h-64 bg-white border border-zinc-200 rounded-2xl" />
+            <div className="h-64 bg-white border border-zinc-200 rounded-2xl" />
+          </div>
+        </div>
+      ) : (
+        <>
 
       {/* Continue de onde parou OU Estado inicial acolhedor */}
       {continueActivity ? (
@@ -376,6 +449,8 @@ export default function DashboardPage() {
           )}
         </section>
       </div>
+        </>
+      )}
     </div>
   );
 }

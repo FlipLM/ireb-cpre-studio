@@ -45,6 +45,9 @@ export const RPG_BALANCE = {
   },
 
   combat: {
+    enemyTurnMinSec: 60, // mínimo de 1 minuto para leitura e resposta confortável
+    enemyTurnBaseSec: 75,
+    enemyTurnEliteBaseSec: 65,
     questionWrongHpPenaltyBase: 14,
     questionWrongHpPenaltyPerRegion: 4,
     specialWrongHpPenaltyMultiplier: 1.35,
@@ -94,4 +97,22 @@ export function computeXpForNextLevel(level: number): number {
 export function scaleXpByRegion(baseXp: number, regionIndex: number): number {
   const mult = 1 + Math.max(0, regionIndex) * RPG_BALANCE.xp.regionMultiplierStep;
   return Math.round(baseXp * mult);
+}
+
+/**
+ * Calcula o tempo limite (em segundos) para defender o ataque inimigo no ENEMY TURN.
+ * Sempre garante ao menos 60 segundos (1 minuto) mesmo nas fases mais avançadas.
+ */
+export function getEnemyTurnTimeLimitSec(
+  regionIndex: number,
+  isElite: boolean,
+  nodeLevel: number
+): number {
+  const base = isElite
+    ? RPG_BALANCE.combat.enemyTurnEliteBaseSec
+    : RPG_BALANCE.combat.enemyTurnBaseSec;
+  return Math.max(
+    RPG_BALANCE.combat.enemyTurnMinSec,
+    base - Math.max(0, regionIndex) * 2 - (nodeLevel >= 7 ? 3 : 0)
+  );
 }

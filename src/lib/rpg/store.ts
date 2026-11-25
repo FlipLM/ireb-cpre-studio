@@ -4,7 +4,12 @@ import { generateWithFreeCascade, isAnyFreeAIConfigured } from '@/lib/ai-provide
 import { loadStaticSourceQuestions } from '@/lib/cloud-store';
 import { evaluateAnswer } from '@/lib/evaluation';
 import { retrieveOfficialIrebKnowledge } from '@/lib/ireb-knowledge';
-import { computeXpForNextLevel, RPG_BALANCE, scaleXpByRegion } from '@/lib/rpg/balance';
+import {
+  computeXpForNextLevel,
+  getEnemyTurnTimeLimitSec,
+  RPG_BALANCE,
+  scaleXpByRegion,
+} from '@/lib/rpg/balance';
 import { getBossById, getBossByRegionIndex } from '@/lib/rpg/data/bosses';
 import { getRegionIntroDialogue } from '@/lib/rpg/data/dialogues';
 import { getEventById } from '@/lib/rpg/data/events';
@@ -20,12 +25,17 @@ import {
   computePartyHintsMax,
   consumePartyHint,
   eliminateWrongOptions,
+  evaluateMultiChoiceCombatRatio,
   spendHeroStatPoint,
   validateHeroEquipChange,
 } from '@/lib/rpg/engine/combat';
 import { generateRegionMap, getAvailableNodeIds } from '@/lib/rpg/engine/map-generator';
+import {
+  extractUsedQuestionCodesFromResolutions,
+  pickNextRunQuestion,
+  shuffleArray,
+} from '@/lib/rpg/engine/question-deck';
 import { isRpgModuleEnabled } from '@/lib/rpg/feature-flag';
-import { DEFAULT_QUESTION_TOPIC_MAP } from '@/lib/taxonomy';
 import type {
   RpgActiveTempEffect,
   RpgBossBattleState,
@@ -100,21 +110,20 @@ function buildStageEnemies(
   });
 }
 
-function getEnemyTurnTimeLimitSec(regionIndex: number, isElite: boolean, nodeLevel: number): number {
-  const base = isElite ? 18 : 22;
-  return Math.max(12, base - regionIndex * 2 - (nodeLevel >= 7 ? 2 : 0));
+function pickNextStageQuestionCode(usedCodes: string[]): string {
+  const all = loadStaticSourceQuestions();
+  return pickNextRunQuestion(all, usedCodes).codigo;
 }
 
-function pickNextStageQuestionCode(regionIndex: number, usedCodes: string[]): string {
-  const region = getRegionByIndex(regionIndex);
-  const all = loadStaticSourceQuestions();
-  const usedSet = new Set(usedCodes);
-  const topicMatches = all.filter(
-    (q) => !usedSet.has(q.codigo) && region.topicIds.includes(DEFAULT_QUESTION_TOPIC_MAP[q.codigo] ?? '')
-  );
-  const pool = topicMatches.length > 0 ? topicMatches : all.filter((q) => !usedSet.has(q.codigo));
-  const finalPool = pool.length > 0 ? pool : all;
-  return finalPool[Math.floor(Math.random() * finalPool.length)].codigo;
+export async function getCampaignRunUsedQuestionCodes(
+  supabase: SupabaseClient,
+  campaignId: string
+): Promise<string[]> {
+  const { data } = await supabase
+    .from('rpg_node_resolutions')
+    .select('question_codigo, outcome_json')
+    .eq('campaign_id', campaignId);
+  return extractUsedQuestionCodesFromResolutions(data ?? []);
 }
 
 function toSafeClientQuestion(codigo: string) {
@@ -133,29 +142,23 @@ function toSafeClientQuestion(codigo: string) {
   };
 }
 
-export function getRegionQuestionBundle(regionIndex: number, mapNodeCodes: string[] = [], limit = 28) {
-  const region = getRegionByIndex(regionIndex);
+/**
+ * Retorna toda a base de questões (225+) embaralhada aleatoriamente para sorteio
+ * sem repetição durante toda a run da campanha RPG.
+ */
+export function getRegionQuestionBundle() {
   const all = loadStaticSourceQuestions();
-  const byCode = new Map(all.map((q) => [q.codigo, q]));
-  const picked = new Map<string, ReturnType<typeof toSafeClientQuestion>>();
-
-  for (const code of mapNodeCodes) {
-    if (code && byCode.has(code) && !picked.has(code)) {
-      picked.set(code, toSafeClientQuestion(code));
-    }
-  }
-
-  const matching = all.filter((q) =>
-    region.topicIds.includes(DEFAULT_QUESTION_TOPIC_MAP[q.codigo] ?? '')
-  );
-  const source = matching.length > 0 ? matching : all;
-  for (const q of source) {
-    if (picked.size >= limit) break;
-    if (!picked.has(q.codigo)) {
-      picked.set(q.codigo, toSafeClientQuestion(q.codigo));
-    }
-  }
-  return Array.from(picked.values());
+  return shuffleArray(all).map((q) => ({
+    codigo: q.codigo,
+    numero: q.numero,
+    enunciado: q.enunciado,
+    tipo: q.tipo,
+    quantidade_respostas: q.quantidade_respostas,
+    alternativas: q.alternativas,
+    managedImageUrl: q.managedImageUrl,
+    correctAnswers: Array.isArray(q.resposta_correta) ? q.resposta_correta : [q.resposta_correta],
+    explanation: q.explicacao,
+  }));
 }
 
 export function buildClientSafeStageEnemies(
@@ -167,16 +170,17 @@ export function buildClientSafeStageEnemies(
   return buildStageEnemies(regionId, isElite, regionIndex, nodeLevel);
 }
 
-function buildRegionQuestionPool(regionIndex: number, excludeCodes: string[], count = 6) {
-  const region = getRegionByIndex(regionIndex);
+function buildRegionQuestionPool(excludeCodes: string[], count = 24) {
   const all = loadStaticSourceQuestions();
-  const used = new Set(excludeCodes);
-  const matching = all.filter(
-    (q) => !used.has(q.codigo) && region.topicIds.includes(DEFAULT_QUESTION_TOPIC_MAP[q.codigo] ?? '')
-  );
-  const source = matching.length >= count ? matching : all.filter((q) => !used.has(q.codigo));
-  const shuffled = [...source].sort(() => Math.random() - 0.5).slice(0, count);
-  return shuffled.map((q) => toSafeClientQuestion(q.codigo));
+  const pool: ReturnType<typeof toSafeClientQuestion>[] = [];
+  const simulatedUsed = [...excludeCodes];
+  const limit = Math.min(count, all.length);
+  for (let i = 0; i < limit; i++) {
+    const picked = pickNextRunQuestion(all, simulatedUsed);
+    simulatedUsed.push(picked.codigo);
+    pool.push(toSafeClientQuestion(picked.codigo));
+  }
+  return pool;
 }
 
 function mapCampaignRow(row: Record<string, unknown>): RpgCampaignState {
@@ -618,7 +622,8 @@ export async function switchRpgRegion(
 export async function selectRpgMapNode(
   supabase: SupabaseClient,
   userId: string,
-  nodeId: string
+  nodeId: string,
+  preferredFirstQuestionCodigo?: string
 ): Promise<{
   node: RpgMapNode;
   alreadyCompleted: boolean;
@@ -651,8 +656,8 @@ export async function selectRpgMapNode(
   if (node.type === 'question' || node.type === 'special') {
     const region = getRegionByIndex(campaign.currentRegionIndex);
 
-    // Paraleliza atualização do nó atual + leitura da resolução existente
-    const [, { data: existingRes }] = await Promise.all([
+    // Paraleliza atualização do nó atual + leitura da resolução existente + histórico da run
+    const [, { data: existingRes }, runUsedCodes] = await Promise.all([
       supabase
         .from('rpg_campaigns')
         .update({ current_node_id: node.id, updated_at: nowIso })
@@ -664,18 +669,35 @@ export async function selectRpgMapNode(
         .eq('region_index', campaign.currentRegionIndex)
         .eq('node_id', node.id)
         .maybeSingle(),
+      getCampaignRunUsedQuestionCodes(supabase, campaign.id),
     ]);
 
     let encounter: RpgStageEncounterState | null = null;
     if (existingRes) {
       const saved = (existingRes.outcome_json as { encounter?: RpgStageEncounterState } | null)?.encounter;
       if (saved && saved.status === 'in_progress') {
-        encounter = saved;
+        encounter = {
+          ...saved,
+          turnTimeLimitSec:
+            saved.phase === 'enemy_turn'
+              ? Math.max(
+                  RPG_BALANCE.combat.enemyTurnMinSec,
+                  saved.turnTimeLimitSec ??
+                    getEnemyTurnTimeLimitSec(campaign.currentRegionIndex, node.type === 'special', node.level)
+                )
+              : saved.turnTimeLimitSec,
+        };
       }
     }
 
+    const allQuestions = loadStaticSourceQuestions();
     if (!encounter) {
-      const firstCode = node.questionCodigo || pickNextStageQuestionCode(campaign.currentRegionIndex, []);
+      const validPreferred =
+        preferredFirstQuestionCodigo &&
+        allQuestions.some((q) => q.codigo === preferredFirstQuestionCodigo)
+          ? preferredFirstQuestionCodigo
+          : null;
+      const firstCode = validPreferred ?? pickNextStageQuestionCode(runUsedCodes);
       encounter = {
         nodeId: node.id,
         status: 'in_progress',
@@ -715,9 +737,8 @@ export async function selectRpgMapNode(
 
     const question = toSafeClientQuestion(encounter.currentQuestionCodigo);
     const questionPool = buildRegionQuestionPool(
-      campaign.currentRegionIndex,
-      encounter.usedQuestionCodes,
-      6
+      [...runUsedCodes, ...encounter.usedQuestionCodes],
+      24
     );
 
     return {
@@ -870,6 +891,10 @@ export async function answerRpgChallengeNode(
   preferredNextQuestionCodigo?: string
 ): Promise<{
   isCorrect: boolean;
+  isPartial: boolean;
+  isMiss: boolean;
+  matchedCount: number;
+  correctCount: number;
   wasEnemyTurn: boolean;
   attackBlocked: boolean;
   timedOut: boolean;
@@ -901,13 +926,16 @@ export async function answerRpgChallengeNode(
   const region = getRegionByIndex(campaign.currentRegionIndex);
   const isSpecial = node.type === 'special';
 
-  const { data: existing } = await supabase
-    .from('rpg_node_resolutions')
-    .select('*')
-    .eq('campaign_id', campaign.id)
-    .eq('region_index', campaign.currentRegionIndex)
-    .eq('node_id', node.id)
-    .maybeSingle();
+  const [{ data: existing }, runUsedCodes] = await Promise.all([
+    supabase
+      .from('rpg_node_resolutions')
+      .select('*')
+      .eq('campaign_id', campaign.id)
+      .eq('region_index', campaign.currentRegionIndex)
+      .eq('node_id', node.id)
+      .maybeSingle(),
+    getCampaignRunUsedQuestionCodes(supabase, campaign.id),
+  ]);
 
   const existingOutcome = (existing?.outcome_json ?? {}) as {
     isCorrect?: boolean;
@@ -922,12 +950,17 @@ export async function answerRpgChallengeNode(
     const q = loadStaticSourceQuestions().find(
       (item) => item.codigo === existingOutcome.encounter!.currentQuestionCodigo
     ) ?? loadStaticSourceQuestions()[0];
+    const correctArr = Array.isArray(q.resposta_correta) ? q.resposta_correta : [q.resposta_correta];
     return {
       isCorrect: true,
+      isPartial: false,
+      isMiss: false,
+      matchedCount: correctArr.length,
+      correctCount: correctArr.length,
       wasEnemyTurn: false,
       attackBlocked: false,
       timedOut: false,
-      correctAnswers: Array.isArray(q.resposta_correta) ? q.resposta_correta : [q.resposta_correta],
+      correctAnswers: correctArr,
       explanation: q.explicacao,
       damageDealt: 0,
       isCritical: false,
@@ -966,9 +999,12 @@ export async function answerRpgChallengeNode(
           turnStartedAt: null,
           turnNumber: 1,
           enemies: buildStageEnemies(region.id, isSpecial, campaign.currentRegionIndex, node.level),
-          currentQuestionCodigo: node.questionCodigo || pickNextStageQuestionCode(campaign.currentRegionIndex, []),
-          usedQuestionCodes: [node.questionCodigo || 'ID-001'],
+          currentQuestionCodigo: pickNextStageQuestionCode(runUsedCodes),
+          usedQuestionCodes: [],
         };
+  if (encounter.usedQuestionCodes.length === 0) {
+    encounter.usedQuestionCodes.push(encounter.currentQuestionCodigo);
+  }
 
   const allQuestions = loadStaticSourceQuestions();
   const question =
@@ -976,11 +1012,15 @@ export async function answerRpgChallengeNode(
 
   const wasEnemyTurn = encounter.phase === 'enemy_turn';
 
-  // Verifica se o tempo do turno de ataque do inimigo esgotou
+  // Verifica se o tempo do turno de ataque do inimigo esgotou (sempre respeitando mínimo de 60s)
   let effectiveTimedOut = timedOut;
   if (wasEnemyTurn && encounter.turnStartedAt && encounter.turnTimeLimitSec) {
+    const effectiveLimitSec = Math.max(
+      RPG_BALANCE.combat.enemyTurnMinSec,
+      encounter.turnTimeLimitSec
+    );
     const elapsedSec = (Date.now() - new Date(encounter.turnStartedAt).getTime()) / 1000;
-    if (elapsedSec > encounter.turnTimeLimitSec + 3) {
+    if (elapsedSec > effectiveLimitSec + 3) {
       effectiveTimedOut = true;
     }
   }
@@ -995,6 +1035,18 @@ export async function answerRpgChallengeNode(
       }
     : evaluateAnswer(selectedAnswers, question.resposta_correta);
 
+  const ratio = effectiveTimedOut
+    ? {
+        correctCount: evalRes.normalizedCorrect.length,
+        matchedCount: 0,
+        hitRatio: 0,
+        missRatio: 1,
+        isFullHit: false,
+        isPartialHit: false,
+        isMiss: true,
+      }
+    : evaluateMultiChoiceCombatRatio(selectedAnswers, question.resposta_correta);
+
   const equipped = heroes.filter((h) => h.isEquipped);
   const partyStats = computeEffectivePartyStats(equipped, campaign.activeEffects);
 
@@ -1008,16 +1060,18 @@ export async function answerRpgChallengeNode(
   let goldAwarded = 0;
 
   if (wasEnemyTurn) {
-    // TURNO DE ATAQUE DO INIMIGO: responder certo antes do tempo = BLOQUEIO TOTAL!
+    // TURNO DE ATAQUE DO INIMIGO (com timer):
+    // - Acerto total no tempo = BLOQUEIO TOTAL (0 de dano).
+    // - Acerto parcial em múltipla escolha = toma apenas a fração não acertada (ex.: 1/2, 2/3).
+    // - Tempo esgotado ou erro total = toma dano integral do atacante.
     const attacker =
       encounter.enemies.find((e) => e.id === encounter.attackingEnemyId && e.currentHp > 0) ??
       encounter.enemies.find((e) => e.currentHp > 0);
     targetEnemyName = attacker?.name ?? null;
 
-    if (evalRes.isCorrect && !effectiveTimedOut) {
+    if (ratio.isFullHit && !effectiveTimedOut) {
       attackBlocked = true;
     } else {
-      // Errou ou tempo acabou -> toma dano pesado do inimigo atacante!
       const rawAtk = attacker?.attackDamage ?? 30;
       const counter = effectiveTimedOut
         ? { parried: false, parriedByHeroName: null, damageTakenPerHero: Math.max(12, rawAtk - partyStats.totalDefense) }
@@ -1030,7 +1084,7 @@ export async function answerRpgChallengeNode(
       if (counter.parried) {
         parriedByHeroName = counter.parriedByHeroName;
       } else {
-        hpPenalty = counter.damageTakenPerHero;
+        hpPenalty = Math.max(1, Math.round(counter.damageTakenPerHero * ratio.missRatio));
         const nowIso = new Date().toISOString();
         await Promise.all(
           equipped.map((hero) => {
@@ -1044,51 +1098,36 @@ export async function answerRpgChallengeNode(
         );
       }
     }
-  } else if (evalRes.isCorrect) {
-    // TURNO DO HERÓI (ACERTO) -> Ataca o inimigo alvo
+  } else if (ratio.isFullHit || ratio.isPartialHit) {
+    // TURNO DO HERÓI (ACERTO TOTAL OU PARCIAL):
+    // - Acerto total -> dano completo (pode dar crítico).
+    // - Acerto parcial em múltipla escolha -> divide o dano proporcionalmente (1/2, 1/3, 2/3...).
     const target =
       encounter.enemies.find((e) => e.id === targetEnemyId && e.currentHp > 0) ??
       encounter.enemies.find((e) => e.currentHp > 0);
 
     if (target) {
-      const hit = calculateBossDamage({
-        score: 1,
-        classification: 'correct',
-        partyStats,
-      });
-      damageDealt = hit.damage;
-      isCritical = hit.isCritical;
+      if (ratio.isFullHit) {
+        const hit = calculateBossDamage({
+          score: 1,
+          classification: 'correct',
+          partyStats,
+        });
+        damageDealt = hit.damage;
+        isCritical = hit.isCritical;
+      } else {
+        damageDealt = Math.max(1, Math.round(partyStats.totalBaseDamage * ratio.hitRatio));
+        isCritical = false;
+      }
       targetEnemyName = target.name;
       target.currentHp = Math.max(0, target.currentHp - damageDealt);
     }
   } else {
-    // TURNO DO HERÓI (ERRO) -> Contra-ataque imediato dos inimigos vivos (~1/3 do HP)
-    const aliveEnemies = encounter.enemies.filter((e) => e.currentHp > 0);
-    const avgAtk = Math.round(
-      aliveEnemies.reduce((acc, e) => acc + e.attackDamage, 0) / Math.max(1, aliveEnemies.length)
-    );
-    const counter = calculateBossCounterAttack({
-      bossAttackDamage: avgAtk,
-      equippedHeroes: equipped,
-      activeEffects: campaign.activeEffects,
-    });
-
-    if (counter.parried) {
-      parriedByHeroName = counter.parriedByHeroName;
-    } else {
-      hpPenalty = counter.damageTakenPerHero;
-      const nowIso = new Date().toISOString();
-      await Promise.all(
-        equipped.map((hero) => {
-          const nextHp = Math.max(0, hero.currentHp - hpPenalty);
-          hero.currentHp = nextHp;
-          return supabase
-            .from('rpg_heroes')
-            .update({ current_hp: nextHp, updated_at: nowIso })
-            .eq('id', hero.id);
-        })
-      );
-    }
+    // TURNO DO HERÓI (ERRO): MISS! Não perde vida no turno do herói.
+    const target =
+      encounter.enemies.find((e) => e.id === targetEnemyId && e.currentHp > 0) ??
+      encounter.enemies.find((e) => e.currentHp > 0);
+    targetEnemyName = target?.name ?? null;
   }
 
   const allEnemiesDead = encounter.enemies.every((e) => e.currentHp <= 0);
@@ -1169,7 +1208,9 @@ export async function answerRpgChallengeNode(
         : null;
     const nextCode =
       validPreferred ??
-      pickNextStageQuestionCode(campaign.currentRegionIndex, encounter.usedQuestionCodes);
+      pickNextStageQuestionCode(
+        existing ? runUsedCodes : [...runUsedCodes, ...encounter.usedQuestionCodes]
+      );
     encounter.currentQuestionCodigo = nextCode;
     encounter.usedQuestionCodes.push(nextCode);
     nextQuestion = toSafeClientQuestion(nextCode);
@@ -1224,7 +1265,11 @@ export async function answerRpgChallengeNode(
   await Promise.all(finalWrites);
 
   return {
-    isCorrect: evalRes.isCorrect,
+    isCorrect: ratio.isFullHit,
+    isPartial: ratio.isPartialHit,
+    isMiss: !wasEnemyTurn && ratio.isMiss,
+    matchedCount: ratio.matchedCount,
+    correctCount: ratio.correctCount,
     wasEnemyTurn,
     attackBlocked,
     timedOut: effectiveTimedOut,

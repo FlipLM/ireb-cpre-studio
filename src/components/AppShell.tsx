@@ -73,6 +73,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const handleLogout = async () => {
     try {
+      window.localStorage.removeItem('cpre_dashboard_cache_v1');
       const supabase = createSupabaseBrowserClient();
       await supabase.auth.signOut();
     } catch {

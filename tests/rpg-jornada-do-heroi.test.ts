@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { computeXpForNextLevel, RPG_BALANCE } from '@/lib/rpg/balance';
+import {
+  computeXpForNextLevel,
+  getEnemyTurnTimeLimitSec,
+  RPG_BALANCE,
+} from '@/lib/rpg/balance';
 import { RPG_BOSSES } from '@/lib/rpg/data/bosses';
 import { RPG_HERO_CLASSES } from '@/lib/rpg/data/heroes';
 import { getItemDefinition } from '@/lib/rpg/data/items';
@@ -13,6 +17,7 @@ import {
   computePartyHintsMax,
   consumePartyHint,
   eliminateWrongOptions,
+  evaluateMultiChoiceCombatRatio,
   spendHeroStatPoint,
   validateHeroEquipChange,
 } from '@/lib/rpg/engine/combat';
@@ -21,6 +26,10 @@ import {
   getAvailableNodeIds,
   validateRegionMapGraph,
 } from '@/lib/rpg/engine/map-generator';
+import {
+  extractUsedQuestionCodesFromResolutions,
+  pickNextRunQuestion,
+} from '@/lib/rpg/engine/question-deck';
 import { isRpgModuleEnabled } from '@/lib/rpg/feature-flag';
 import type { RpgHeroState } from '@/types/rpg';
 
@@ -293,5 +302,90 @@ describe('Módulo RPG "Jornada do Herói" — Regras de Negócio, Mapas, Combate
     const wrong = evaluateBossAnswerHeuristic(bossPrompt, 'Não sei responder.');
     expect(wrong.classification).toBe('incorrect');
     expect(wrong.score).toBeLessThan(0.4);
+  });
+
+  it('garante ao menos 60 segundos (1 minuto) no ENEMY TURN em todas as regiões e níveis', () => {
+    for (let regionIndex = 0; regionIndex <= 3; regionIndex++) {
+      for (const isElite of [false, true]) {
+        for (let level = 1; level <= 10; level++) {
+          const limit = getEnemyTurnTimeLimitSec(regionIndex, isElite, level);
+          expect(limit).toBeGreaterThanOrEqual(60);
+        }
+      }
+    }
+  });
+
+  it('sorteia aleatoriamente entre todas as 225 questões sem repetir na mesma run até esgotar a base', () => {
+    const allQuestions = Array.from({ length: 225 }, (_, i) => ({
+      codigo: `ID-${String(i + 1).padStart(3, '0')}`,
+    }));
+
+    const usedInRun: string[] = [];
+    for (let i = 0; i < 225; i++) {
+      const picked = pickNextRunQuestion(allQuestions, usedInRun);
+      expect(usedInRun).not.toContain(picked.codigo);
+      usedInRun.push(picked.codigo);
+    }
+
+    // Todas as 225 questões foram sorteadas exatamente 1 vez na run
+    expect(new Set(usedInRun).size).toBe(225);
+
+    // Após completar todas as 225, inicia um segundo ciclo sem repetir antes de fechar o 2º ciclo
+    const secondCycle: string[] = [];
+    for (let i = 0; i < 225; i++) {
+      const picked = pickNextRunQuestion(allQuestions, [...usedInRun, ...secondCycle]);
+      expect(secondCycle).not.toContain(picked.codigo);
+      secondCycle.push(picked.codigo);
+    }
+    expect(new Set(secondCycle).size).toBe(225);
+  });
+
+  it('extrai corretamente o histórico de questões usadas a partir das resoluções da campanha', () => {
+    const codes = extractUsedQuestionCodesFromResolutions([
+      { question_codigo: 'ID-001', outcome_json: { encounter: { usedQuestionCodes: ['ID-001', 'ID-042', 'ID-199'] } } },
+      { question_codigo: 'ID-120', outcome_json: {} },
+    ]);
+    expect(codes).toEqual(['ID-001', 'ID-042', 'ID-199', 'ID-120']);
+  });
+
+  it('divide proporcionalmente o dano em questões de múltipla escolha (2 e 3 alternativas corretas)', () => {
+    // 2 corretas, acertou 1 -> hitRatio = 1/2, missRatio = 1/2
+    const half = evaluateMultiChoiceCombatRatio(['A', 'B'], ['A', 'C']);
+    expect(half.isPartialHit).toBe(true);
+    expect(half.matchedCount).toBe(1);
+    expect(half.correctCount).toBe(2);
+    expect(half.hitRatio).toBeCloseTo(0.5, 5);
+    expect(half.missRatio).toBeCloseTo(0.5, 5);
+
+    // 3 corretas, acertou 1 -> hitRatio = 1/3, missRatio = 2/3
+    const oneOfThree = evaluateMultiChoiceCombatRatio(['A', 'B', 'D'], ['A', 'C', 'E']);
+    expect(oneOfThree.isPartialHit).toBe(true);
+    expect(oneOfThree.matchedCount).toBe(1);
+    expect(oneOfThree.correctCount).toBe(3);
+    expect(oneOfThree.hitRatio).toBeCloseTo(1 / 3, 5);
+    expect(oneOfThree.missRatio).toBeCloseTo(2 / 3, 5);
+
+    // 3 corretas, acertou 2 -> hitRatio = 2/3, missRatio = 1/3
+    const twoOfThree = evaluateMultiChoiceCombatRatio(['A', 'C', 'D'], ['A', 'C', 'E']);
+    expect(twoOfThree.isPartialHit).toBe(true);
+    expect(twoOfThree.hitRatio).toBeCloseTo(2 / 3, 5);
+    expect(twoOfThree.missRatio).toBeCloseTo(1 / 3, 5);
+
+    // Acerto total -> hitRatio = 1, missRatio = 0
+    const full = evaluateMultiChoiceCombatRatio(['A', 'C'], ['A', 'C']);
+    expect(full.isFullHit).toBe(true);
+    expect(full.hitRatio).toBe(1);
+    expect(full.missRatio).toBe(0);
+
+    // Erro total -> isMiss = true, hitRatio = 0, missRatio = 1
+    const miss = evaluateMultiChoiceCombatRatio(['B', 'D'], ['A', 'C']);
+    expect(miss.isMiss).toBe(true);
+    expect(miss.hitRatio).toBe(0);
+    expect(miss.missRatio).toBe(1);
+
+    // Anti-exploit: marcar todas as 4 opções quando só 2 são corretas anula os acertos extras
+    const cheese = evaluateMultiChoiceCombatRatio(['A', 'B', 'C', 'D'], ['A', 'C']);
+    expect(cheese.matchedCount).toBe(0);
+    expect(cheese.isMiss).toBe(true);
   });
 });

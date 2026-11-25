@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { isRpgModuleEnabled } from '@/lib/rpg/feature-flag';
 import {
+  getCampaignRunUsedQuestionCodes,
   getOrCreateCampaignSnapshot,
   getRegionQuestionBundle,
   markRpgDialogueSeen,
@@ -27,12 +28,11 @@ export async function GET() {
     if (!user) return NextResponse.json({ error: 'Não autenticado.' }, { status: 401 });
 
     const snapshot = await getOrCreateCampaignSnapshot(supabase, user.id);
-    const mapCodes = snapshot.currentMap.graph.nodes
-      .map((n) => n.questionCodigo)
-      .filter((c): c is string => Boolean(c));
+    const runUsedQuestionCodes = await getCampaignRunUsedQuestionCodes(supabase, snapshot.campaign.id);
     return NextResponse.json({
       ...snapshot,
-      regionQuestionPool: getRegionQuestionBundle(snapshot.campaign.currentRegionIndex, mapCodes),
+      regionQuestionPool: getRegionQuestionBundle(),
+      runUsedQuestionCodes,
     });
   } catch (error) {
     return NextResponse.json(
@@ -59,10 +59,12 @@ export async function PATCH(request: NextRequest) {
       parsed.data.action === 'seen_dialogue'
         ? await markRpgDialogueSeen(supabase, user.id, parsed.data.dialogueId)
         : await switchRpgRegion(supabase, user.id, parsed.data.regionIndex);
+    const runUsedQuestionCodes = await getCampaignRunUsedQuestionCodes(supabase, snapshot.campaign.id);
 
     return NextResponse.json({
       ...snapshot,
-      regionQuestionPool: getRegionQuestionBundle(snapshot.campaign.currentRegionIndex),
+      regionQuestionPool: getRegionQuestionBundle(),
+      runUsedQuestionCodes,
     });
   } catch (error) {
     return NextResponse.json(
@@ -88,7 +90,8 @@ export async function POST(request: NextRequest) {
     const snapshot = await resetRpgCampaign(supabase, user.id);
     return NextResponse.json({
       ...snapshot,
-      regionQuestionPool: getRegionQuestionBundle(snapshot.campaign.currentRegionIndex),
+      regionQuestionPool: getRegionQuestionBundle(),
+      runUsedQuestionCodes: [],
     });
   } catch (error) {
     return NextResponse.json(

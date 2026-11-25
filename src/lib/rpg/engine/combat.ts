@@ -225,6 +225,61 @@ export function calculateBossCounterAttack(params: {
 }
 
 /**
+ * Calcula a fração de acerto/erro para combate em questões de única ou múltipla escolha:
+ * - Em questões com N alternativas corretas (ex.: 2 ou 3), divide proporcionalmente o dano.
+ * - Ex.: 2 corretas e acertou 1 -> hitRatio = 1/2, missRatio = 1/2 (toma 1/2 do dano ou causa 1/2 do dano).
+ * - Ex.: 3 corretas e acertou 1 -> hitRatio = 1/3, missRatio = 2/3 (toma 2/3 do dano ou causa 1/3 do dano).
+ * - Penaliza marcações excedentes acima de N para impedir marcar todas as opções.
+ */
+export function evaluateMultiChoiceCombatRatio(
+  selectedAnswers: string[],
+  correctAnswers: string | string[]
+): {
+  correctCount: number;
+  matchedCount: number;
+  hitRatio: number;
+  missRatio: number;
+  isFullHit: boolean;
+  isPartialHit: boolean;
+  isMiss: boolean;
+} {
+  const normalizedCorrect = Array.from(
+    new Set(
+      (Array.isArray(correctAnswers) ? correctAnswers : [correctAnswers])
+        .map((c) => c.trim().toUpperCase())
+        .filter(Boolean)
+    )
+  );
+  const normalizedSelected = Array.from(
+    new Set(selectedAnswers.map((s) => s.trim().toUpperCase()).filter(Boolean))
+  );
+
+  const correctCount = Math.max(1, normalizedCorrect.length);
+  const correctSet = new Set(normalizedCorrect);
+
+  let rawMatches = 0;
+  for (const sel of normalizedSelected) {
+    if (correctSet.has(sel)) rawMatches += 1;
+  }
+
+  const excessSelected = Math.max(0, normalizedSelected.length - correctCount);
+  const matchedCount = Math.max(0, rawMatches - excessSelected);
+
+  const hitRatio = matchedCount / correctCount;
+  const missRatio = (correctCount - matchedCount) / correctCount;
+
+  return {
+    correctCount,
+    matchedCount,
+    hitRatio,
+    missRatio,
+    isFullHit: matchedCount === correctCount && excessSelected === 0,
+    isPartialHit: matchedCount > 0 && matchedCount < correctCount,
+    isMiss: matchedCount === 0,
+  };
+}
+
+/**
  * Aplica XP a um herói e processa level-ups conservadores (1 ponto de atributo por nível).
  */
 export function applyXpToHero(hero: RpgHeroState, xpGain: number): {

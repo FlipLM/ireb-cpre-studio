@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ArrowLeft,
   Backpack,
@@ -47,6 +47,7 @@ import {
   type RpgMusicTrack,
 } from '@/lib/rpg/audio';
 import { isRpgModuleEnabled } from '@/lib/rpg/feature-flag';
+import { pickNextRunQuestion } from '@/lib/rpg/engine/question-deck';
 import { cn } from '@/lib/utils';
 import type {
   RpgCampaignSnapshot,
@@ -125,6 +126,7 @@ export default function RpgJornadaPage() {
   const [activeQuestion, setActiveQuestion] = useState<ActiveQuestionPayload | null>(null);
   const [activeQuestionSyncPromise, setActiveQuestionSyncPromise] = useState<Promise<unknown> | undefined>(undefined);
   const [regionQuestionPool, setRegionQuestionPool] = useState<SafeClientQuestion[]>([]);
+  const runUsedQuestionCodesRef = useRef<string[]>([]);
   const [activeEvent, setActiveEvent] = useState<{
     node: RpgMapNode;
     event?: RpgEventDefinition;
@@ -160,6 +162,9 @@ export default function RpgJornadaPage() {
         setSnapshot(data);
         if (Array.isArray(data.regionQuestionPool)) {
           setRegionQuestionPool(data.regionQuestionPool);
+        }
+        if (Array.isArray(data.runUsedQuestionCodes)) {
+          runUsedQuestionCodesRef.current = data.runUsedQuestionCodes;
         }
         if (data.activeBossBattle && data.activeBossBattle.status === 'in_progress') {
           setShowBossArena(true);
@@ -295,6 +300,9 @@ export default function RpgJornadaPage() {
         if (Array.isArray(data.regionQuestionPool)) {
           setRegionQuestionPool(data.regionQuestionPool);
         }
+        if (Array.isArray(data.runUsedQuestionCodes)) {
+          runUsedQuestionCodesRef.current = data.runUsedQuestionCodes;
+        }
         setSnapshot(data);
       })
       .catch((e) => setError(e instanceof Error ? e.message : 'Não foi possível trocar de região.'));
@@ -314,11 +322,11 @@ export default function RpgJornadaPage() {
         : prev
     );
 
-    const syncNodeSelect = () =>
+    const syncNodeSelect = (preferredFirstQuestionCodigo?: string) =>
       fetch('/api/rpg/node/select', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nodeId: node.id }),
+        body: JSON.stringify({ nodeId: node.id, preferredFirstQuestionCodigo }),
       }).then(async (res) => {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Não foi possível acessar este nó.');
@@ -342,11 +350,10 @@ export default function RpgJornadaPage() {
       return;
     }
 
-    // 3. COMBATE (QUESTÃO / ELITE) -> abre em < 5ms usando o pool pré-carregado + sync em background!
+    // 3. COMBATE (QUESTÃO / ELITE) -> sorteia aleatoriamente entre todas as 225+ questões sem repetir na mesma run!
     if ((node.type === 'question' || node.type === 'special') && regionQuestionPool.length > 0) {
-      const firstQ =
-        regionQuestionPool.find((q) => q.codigo === node.questionCodigo) ??
-        regionQuestionPool[Math.floor(Math.random() * regionQuestionPool.length)];
+      const firstQ = pickNextRunQuestion(regionQuestionPool, runUsedQuestionCodesRef.current);
+      runUsedQuestionCodesRef.current = [...runUsedQuestionCodesRef.current, firstQ.codigo];
       const localEncounter = {
         nodeId: node.id,
         status: 'in_progress' as const,
@@ -365,7 +372,7 @@ export default function RpgJornadaPage() {
         usedQuestionCodes: [firstQ.codigo],
       };
 
-      const syncPromise = syncNodeSelect().catch((e) => {
+      const syncPromise = syncNodeSelect(firstQ.codigo).catch((e) => {
         setError(e instanceof Error ? e.message : 'Erro ao sincronizar combate.');
       });
       setActiveQuestionSyncPromise(syncPromise);
@@ -420,6 +427,10 @@ export default function RpgJornadaPage() {
       setActiveEvent(null);
       setPendingRewardChest(null);
       setShowBossArena(false);
+      runUsedQuestionCodesRef.current = [];
+      if (Array.isArray(data.regionQuestionPool)) {
+        setRegionQuestionPool(data.regionQuestionPool);
+      }
       setSnapshot(data);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Erro ao reiniciar jornada.');
@@ -952,6 +963,10 @@ export default function RpgJornadaPage() {
           gold={campaign.gold}
           inventory={inventory}
           initialSyncPromise={activeQuestionSyncPromise}
+          getRunUsedCodes={() => runUsedQuestionCodesRef.current}
+          onQuestionUsed={(codigo) => {
+            runUsedQuestionCodesRef.current = [...runUsedQuestionCodesRef.current, codigo];
+          }}
           onSnapshotUpdate={setSnapshot}
           onOpenRewardChest={(nodeId, style) => {
             setActiveQuestion(null);

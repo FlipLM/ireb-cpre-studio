@@ -7,7 +7,10 @@ import { getAuthenticatedSupabase } from '@/lib/supabase/server';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const bodySchema = z.object({ nodeId: z.string().min(1) });
+const bodySchema = z.object({
+  nodeId: z.string().min(1),
+  preferredFirstQuestionCodigo: z.string().min(1).optional(),
+});
 
 export async function POST(request: NextRequest) {
   if (!isRpgModuleEnabled()) {
@@ -22,7 +25,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'nodeId inválido.' }, { status: 400 });
     }
 
-    const result = await selectRpgMapNode(supabase, user.id, parsed.data.nodeId);
+    const result = await selectRpgMapNode(
+      supabase,
+      user.id,
+      parsed.data.nodeId,
+      parsed.data.preferredFirstQuestionCodigo
+    );
     return NextResponse.json(result);
   } catch (error) {
     return NextResponse.json(

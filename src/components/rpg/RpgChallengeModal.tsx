@@ -28,13 +28,19 @@ import {
 } from '@/components/rpg/RpgArtwork';
 import { evaluateAnswer } from '@/lib/evaluation';
 import { playRpgSfx } from '@/lib/rpg/audio';
-import { RPG_BALANCE, scaleXpByRegion } from '@/lib/rpg/balance';
+import {
+  getEnemyTurnTimeLimitSec,
+  RPG_BALANCE,
+  scaleXpByRegion,
+} from '@/lib/rpg/balance';
 import { getItemDefinition } from '@/lib/rpg/data/items';
 import {
   calculateBossCounterAttack,
   calculateBossDamage,
   computeEffectivePartyStats,
+  evaluateMultiChoiceCombatRatio,
 } from '@/lib/rpg/engine/combat';
+import { pickNextRunQuestion } from '@/lib/rpg/engine/question-deck';
 import { playSound } from '@/lib/sounds';
 import { cn } from '@/lib/utils';
 import type {
@@ -112,15 +118,20 @@ const EnemyTurnTimer = memo(function EnemyTurnTimer({
     return () => window.clearInterval(interval);
   }, [timeLimitSec, turnKey]);
 
+  const ceilRemaining = Math.ceil(secondsLeft);
+  const mins = Math.floor(ceilRemaining / 60);
+  const secs = ceilRemaining % 60;
+  const formattedTime = mins > 0 ? `${mins}:${String(secs).padStart(2, '0')}` : `${secs}s`;
+
   return (
     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-[#1c1016] border border-rose-500/80 text-xs font-black text-rose-200">
       <Clock className="w-3.5 h-3.5 text-rose-400" />
-      <span>{Math.ceil(secondsLeft)}s</span>
+      <span>{formattedTime}</span>
       <div className="w-24 h-2 rounded-full bg-black/80 overflow-hidden">
         <div
           className={cn(
             'h-full transition-all duration-150',
-            secondsLeft <= 5 ? 'bg-rose-500' : 'bg-amber-400'
+            secondsLeft <= 10 ? 'bg-rose-500' : 'bg-amber-400'
           )}
           style={{ width: `${Math.max(0, (secondsLeft / timeLimitSec) * 100)}%` }}
         />
@@ -144,6 +155,8 @@ export function RpgChallengeModal({
   gold,
   inventory,
   initialSyncPromise,
+  getRunUsedCodes,
+  onQuestionUsed,
   onSnapshotUpdate,
   onOpenRewardChest,
   onClose,
@@ -156,6 +169,8 @@ export function RpgChallengeModal({
   gold: number;
   inventory: RpgInventoryEntry[];
   initialSyncPromise?: Promise<unknown>;
+  getRunUsedCodes?: () => string[];
+  onQuestionUsed?: (codigo: string) => void;
   onSnapshotUpdate: (snapshot: RpgCampaignSnapshot) => void;
   onOpenRewardChest: (nodeId: string, style: 'wood' | 'gold') => void;
   onClose: () => void;
@@ -192,11 +207,15 @@ export function RpgChallengeModal({
   const [dmgPopup, setDmgPopup] = useState<{
     key: number;
     text: string;
-    tone: 'crit' | 'hit' | 'parry' | 'bad';
+    tone: 'crit' | 'hit' | 'parry' | 'miss' | 'bad';
   } | null>(null);
 
   const [turnResult, setTurnResult] = useState<{
     isCorrect: boolean;
+    isPartial?: boolean;
+    isMiss?: boolean;
+    matchedCount?: number;
+    correctCount?: number;
     wasEnemyTurn: boolean;
     attackBlocked: boolean;
     timedOut: boolean;
@@ -216,7 +235,10 @@ export function RpgChallengeModal({
   } | null>(null);
 
   const isEnemyTurn = encounter.phase === 'enemy_turn';
-  const timeLimitSec = encounter.turnTimeLimitSec ?? 20;
+  const timeLimitSec = Math.max(
+    RPG_BALANCE.combat.enemyTurnMinSec,
+    encounter.turnTimeLimitSec ?? RPG_BALANCE.combat.enemyTurnMinSec
+  );
 
   const elimItems = inventory.filter((entry) => {
     const def = getItemDefinition(entry.itemId);
@@ -295,6 +317,10 @@ export function RpgChallengeModal({
   const playTurnFx = (data: {
     attackBlocked: boolean;
     isCorrect: boolean;
+    isPartial?: boolean;
+    isMiss?: boolean;
+    matchedCount?: number;
+    correctCount?: number;
     isCritical: boolean;
     damageDealt: number;
     parriedByHeroName: string | null;
@@ -308,13 +334,21 @@ export function RpgChallengeModal({
       setVfx({ target: 'hero', type: 'parry', key });
       setDmgPopup({ key, text: 'ATAQUE BLOQUEADO!', tone: 'parry' });
       playRpgSfx('parry_clang');
-    } else if (data.isCorrect) {
+    } else if (data.isMiss) {
+      setHeroAnim('attack');
+      setDmgPopup({ key, text: 'MISS!', tone: 'miss' });
+      playRpgSfx('click');
+    } else if (data.damageDealt > 0) {
       setHeroAnim('attack');
       setHitEnemyId(activeTargetId);
       setVfx({ target: 'enemy', type: data.isCritical ? 'crit' : 'slash', key });
       setDmgPopup({
         key,
-        text: data.isCritical ? `-${data.damageDealt} CRÍTICO!` : `-${data.damageDealt}`,
+        text: data.isCritical
+          ? `-${data.damageDealt} CRÍTICO!`
+          : data.isPartial && data.matchedCount !== undefined && data.correctCount
+            ? `-${data.damageDealt} (${data.matchedCount}/${data.correctCount})`
+            : `-${data.damageDealt}`,
         tone: data.isCritical ? 'crit' : 'hit',
       });
       if (data.isCritical) {
@@ -337,7 +371,11 @@ export function RpgChallengeModal({
       setVfx({ target: 'hero', type: 'dark', key });
       setDmgPopup({
         key,
-        text: data.timedOut ? `TEMPO ESGOTADO! -${data.hpPenalty} HP` : `-${data.hpPenalty} HP`,
+        text: data.timedOut
+          ? `TEMPO ESGOTADO! -${data.hpPenalty} HP`
+          : data.isPartial && data.matchedCount !== undefined && data.correctCount
+            ? `PARCIAL (${data.matchedCount}/${data.correctCount}) -${data.hpPenalty} HP`
+            : `-${data.hpPenalty} HP`,
         tone: 'bad',
       });
       playRpgSfx(data.encounterStatus === 'defeat' ? 'defeat_chord' : 'boss_hit');
@@ -376,6 +414,17 @@ export function RpgChallengeModal({
       const evalRes = timedOut
         ? { isCorrect: false, normalizedSelected: [] as string[], normalizedCorrect: question.correctAnswers }
         : evaluateAnswer(chosenAnswers, question.correctAnswers);
+      const ratio = timedOut
+        ? {
+            correctCount: question.correctAnswers.length,
+            matchedCount: 0,
+            hitRatio: 0,
+            missRatio: 1,
+            isFullHit: false,
+            isPartialHit: false,
+            isMiss: true,
+          }
+        : evaluateMultiChoiceCombatRatio(chosenAnswers, question.correctAnswers);
       const partyStats = computeEffectivePartyStats(nextHeroes, activeEffects);
 
       let damageDealt = 0;
@@ -392,7 +441,7 @@ export function RpgChallengeModal({
           nextEncounter.enemies.find((e) => e.id === nextEncounter.attackingEnemyId && e.currentHp > 0) ??
           nextEncounter.enemies.find((e) => e.currentHp > 0);
         targetEnemyName = attacker?.name ?? null;
-        if (evalRes.isCorrect && !timedOut) {
+        if (ratio.isFullHit && !timedOut) {
           attackBlocked = true;
         } else {
           const rawAtk = attacker?.attackDamage ?? 30;
@@ -406,37 +455,32 @@ export function RpgChallengeModal({
           if (counter.parried) {
             parriedByHeroName = counter.parriedByHeroName;
           } else {
-            hpPenalty = counter.damageTakenPerHero;
+            hpPenalty = Math.max(1, Math.round(counter.damageTakenPerHero * ratio.missRatio));
             for (const h of nextHeroes) h.currentHp = Math.max(0, h.currentHp - hpPenalty);
           }
         }
-      } else if (evalRes.isCorrect) {
+      } else if (ratio.isFullHit || ratio.isPartialHit) {
         const target =
           nextEncounter.enemies.find((e) => e.id === targetId && e.currentHp > 0) ??
           nextEncounter.enemies.find((e) => e.currentHp > 0);
         if (target) {
-          const hit = calculateBossDamage({ score: 1, classification: 'correct', partyStats });
-          damageDealt = hit.damage;
-          isCritical = hit.isCritical;
+          if (ratio.isFullHit) {
+            const hit = calculateBossDamage({ score: 1, classification: 'correct', partyStats });
+            damageDealt = hit.damage;
+            isCritical = hit.isCritical;
+          } else {
+            damageDealt = Math.max(1, Math.round(partyStats.totalBaseDamage * ratio.hitRatio));
+            isCritical = false;
+          }
           targetEnemyName = target.name;
           target.currentHp = Math.max(0, target.currentHp - damageDealt);
         }
       } else {
-        const aliveEnemies = nextEncounter.enemies.filter((e) => e.currentHp > 0);
-        const avgAtk = Math.round(
-          aliveEnemies.reduce((acc, e) => acc + e.attackDamage, 0) / Math.max(1, aliveEnemies.length)
-        );
-        const counter = calculateBossCounterAttack({
-          bossAttackDamage: avgAtk,
-          equippedHeroes: nextHeroes,
-          activeEffects,
-        });
-        if (counter.parried) {
-          parriedByHeroName = counter.parriedByHeroName;
-        } else {
-          hpPenalty = counter.damageTakenPerHero;
-          for (const h of nextHeroes) h.currentHp = Math.max(0, h.currentHp - hpPenalty);
-        }
+        // TURNO DO HERÓI (ERRO): MISS! Não perde vida no turno do herói.
+        const target =
+          nextEncounter.enemies.find((e) => e.id === targetId && e.currentHp > 0) ??
+          nextEncounter.enemies.find((e) => e.currentHp > 0);
+        targetEnemyName = target?.name ?? null;
       }
 
       const allEnemiesDead = nextEncounter.enemies.every((e) => e.currentHp <= 0);
@@ -460,25 +504,26 @@ export function RpgChallengeModal({
         nextEncounter.turnTimeLimitSec = null;
       } else {
         nextEncounter.turnNumber += 1;
-        const usedSet = new Set(nextEncounter.usedQuestionCodes);
+        const runUsed = getRunUsedCodes ? getRunUsedCodes() : nextEncounter.usedQuestionCodes;
         const candidate =
-          questionPoolRef.current.find((q) => !usedSet.has(q.codigo)) ??
-          questionPoolRef.current[0] ??
-          null;
+          questionPoolRef.current.length > 0
+            ? pickNextRunQuestion(questionPoolRef.current, runUsed)
+            : null;
         if (candidate) {
           nextQ = candidate;
           nextEncounter.currentQuestionCodigo = candidate.codigo;
           nextEncounter.usedQuestionCodes.push(candidate.codigo);
+          onQuestionUsed?.(candidate.codigo);
         }
         const alive = nextEncounter.enemies.filter((e) => e.currentHp > 0);
         if (!wasEnemyTurn && alive.length > 0) {
           const attacker = alive[(nextEncounter.turnNumber - 1) % alive.length];
           nextEncounter.phase = 'enemy_turn';
           nextEncounter.attackingEnemyId = attacker.id;
-          const baseLim = isSpecial ? 18 : 22;
-          nextEncounter.turnTimeLimitSec = Math.max(
-            12,
-            baseLim - region.index * 2 - (node.level >= 7 ? 2 : 0)
+          nextEncounter.turnTimeLimitSec = getEnemyTurnTimeLimitSec(
+            region.index,
+            isSpecial,
+            node.level
           );
           nextEncounter.turnStartedAt = new Date().toISOString();
         } else {
@@ -490,7 +535,11 @@ export function RpgChallengeModal({
       }
 
       const localResult = {
-        isCorrect: evalRes.isCorrect,
+        isCorrect: ratio.isFullHit,
+        isPartial: ratio.isPartialHit,
+        isMiss: !wasEnemyTurn && ratio.isMiss,
+        matchedCount: ratio.matchedCount,
+        correctCount: ratio.correctCount,
         wasEnemyTurn,
         attackBlocked,
         timedOut,
@@ -667,6 +716,7 @@ export function RpgChallengeModal({
                   dmgPopup.tone === 'crit' && 'bg-amber-400 text-slate-950 border-yellow-100',
                   dmgPopup.tone === 'hit' && 'bg-emerald-600 text-white border-emerald-200',
                   dmgPopup.tone === 'parry' && 'bg-sky-400 text-slate-950 border-sky-100',
+                  dmgPopup.tone === 'miss' && 'bg-slate-700 text-amber-100 border-slate-300',
                   dmgPopup.tone === 'bad' && 'bg-rose-700 text-white border-rose-200'
                 )}
               >
@@ -919,11 +969,15 @@ export function RpgChallengeModal({
             <div
               className={cn(
                 'rounded-xl border-2 p-3.5 space-y-1.5 animate-card-enter',
-                turnResult.encounterStatus === 'defeat'
-                  ? 'bg-rose-950/85 border-rose-400'
-                  : turnResult.isCorrect
-                    ? 'bg-emerald-950/65 border-emerald-400/70'
-                    : 'bg-rose-950/65 border-rose-400/70'
+                  turnResult.encounterStatus === 'defeat'
+                    ? 'bg-rose-950/85 border-rose-400'
+                    : turnResult.isCorrect
+                      ? 'bg-emerald-950/65 border-emerald-400/70'
+                      : turnResult.isPartial
+                        ? 'bg-amber-950/65 border-amber-400/70'
+                        : turnResult.isMiss
+                          ? 'bg-slate-900/80 border-slate-400/70'
+                          : 'bg-rose-950/65 border-rose-400/70'
               )}
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
@@ -943,11 +997,17 @@ export function RpgChallengeModal({
                         ? `Ataque de ${turnResult.targetEnemyName} BLOQUEADO com perfeição!`
                         : turnResult.timedOut
                           ? `Tempo esgotado! ${turnResult.targetEnemyName} acertou o grupo!`
-                          : turnResult.isCorrect
-                            ? `Você acertou ${turnResult.targetEnemyName}!`
-                            : turnResult.parriedByHeroName
-                              ? `Parry executado por ${turnResult.parriedByHeroName}!`
-                              : 'Os inimigos contra-atacaram!'}
+                          : turnResult.isMiss
+                            ? `MISS! Seu ataque errou ${turnResult.targetEnemyName ?? 'o alvo'} (sem perda de HP).`
+                            : turnResult.wasEnemyTurn && turnResult.isPartial
+                              ? `Defesa parcial (${turnResult.matchedCount}/${turnResult.correctCount})! Dano de ${turnResult.targetEnemyName} reduzido.`
+                              : !turnResult.wasEnemyTurn && turnResult.isPartial
+                                ? `Acerto parcial (${turnResult.matchedCount}/${turnResult.correctCount})! Dano dividido em ${turnResult.targetEnemyName}.`
+                                : turnResult.isCorrect
+                                  ? `Você acertou ${turnResult.targetEnemyName}!`
+                                  : turnResult.parriedByHeroName
+                                    ? `Parry executado por ${turnResult.parriedByHeroName}!`
+                                    : `${turnResult.targetEnemyName ?? 'O inimigo'} acertou o grupo!`}
                 </span>
                 <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-extrabold">
                   {turnResult.damageDealt > 0 && (

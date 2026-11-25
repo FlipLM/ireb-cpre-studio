@@ -1097,14 +1097,22 @@ export async function cloudGetTopicPerformances(
 }
 
 export async function cloudGetDashboardAnalytics(supabase: SupabaseClient) {
-  const [questions, exams, topics, attemptsRes] = await Promise.all([
-    cloudListQuestionsWithProgress(supabase),
-    cloudListExamSessions(supabase),
-    cloudGetTopicPerformances(supabase),
+  const sourceQuestions = loadStaticSourceQuestions();
+  const staticTopics = getStaticTopics();
+
+  // Uma única rodada paralela ao Supabase (6 queries mínimas, zero consultas duplicadas)
+  const [settings, attemptsRes, favsRes, srRes, customTopicsRes, exams] = await Promise.all([
+    cloudGetAppSettings(supabase),
     supabase
       .from('user_attempts')
       .select('id, question_codigo, is_correct, time_spent_ms, created_at')
       .order('id', { ascending: true }),
+    supabase.from('user_favorites').select('question_codigo'),
+    supabase
+      .from('user_spaced_repetition')
+      .select('question_codigo, consecutive_correct, next_review_at'),
+    supabase.from('user_question_topics').select('question_codigo, topic_id'),
+    cloudListExamSessions(supabase),
   ]);
 
   const attempts = (attemptsRes.data ?? []) as Array<{
@@ -1115,8 +1123,150 @@ export async function cloudGetDashboardAnalytics(supabase: SupabaseClient) {
     created_at: string;
   }>;
 
-  const totalQuestions = questions.length;
-  const answeredUnique = questions.filter((q) => q.progress.attemptsCount > 0).length;
+  const statsMap = new Map<
+    string,
+    { attemptsCount: number; wrongCount: number; lastIsCorrect: boolean | null }
+  >();
+  for (const a of attempts) {
+    const cur = statsMap.get(a.question_codigo) ?? {
+      attemptsCount: 0,
+      wrongCount: 0,
+      lastIsCorrect: null,
+    };
+    cur.attemptsCount += 1;
+    if (!a.is_correct) cur.wrongCount += 1;
+    cur.lastIsCorrect = Boolean(a.is_correct);
+    statsMap.set(a.question_codigo, cur);
+  }
+
+  const favSet = new Set(
+    (favsRes.data ?? []).map((r: { question_codigo: string }) => r.question_codigo)
+  );
+  const srMap = new Map<
+    string,
+    { consecutive_correct: number; next_review_at: string | null }
+  >();
+  for (const r of (srRes.data ?? []) as Array<{
+    question_codigo: string;
+    consecutive_correct: number;
+    next_review_at: string | null;
+  }>) {
+    srMap.set(r.question_codigo, r);
+  }
+  const customTopicMap = new Map<string, string>();
+  for (const t of (customTopicsRes.data ?? []) as Array<{
+    question_codigo: string;
+    topic_id: string;
+  }>) {
+    customTopicMap.set(t.question_codigo, t.topic_id);
+  }
+
+  const nowIso = new Date().toISOString();
+  const questionTopicMap = new Map<string, string>();
+  const topicQuestionCounts = new Map<string, number>();
+  const topicErrorReviewCounts = new Map<string, number>();
+
+  let answeredUnique = 0;
+  let errorReviewCount = 0;
+  let dueSpacedReviewCount = 0;
+  let favoritesCount = 0;
+  let firstUnanswered: (typeof sourceQuestions)[number] | null = null;
+
+  for (const base of sourceQuestions) {
+    const stat = statsMap.get(base.codigo);
+    const sr = srMap.get(base.codigo);
+    const attemptsCount = stat?.attemptsCount ?? 0;
+    const wrongCount = stat?.wrongCount ?? 0;
+    const consecutiveCorrect = sr?.consecutive_correct ?? (stat?.lastIsCorrect ? 1 : 0);
+    const needsErrorReview =
+      wrongCount > 0 && consecutiveCorrect < settings.errorReviewRequiredStreak;
+
+    if (attemptsCount > 0) {
+      answeredUnique += 1;
+    } else if (!firstUnanswered) {
+      firstUnanswered = base;
+    }
+
+    if (needsErrorReview) errorReviewCount += 1;
+    if (sr?.next_review_at && sr.next_review_at <= nowIso) dueSpacedReviewCount += 1;
+    if (favSet.has(base.codigo)) favoritesCount += 1;
+
+    const topicId =
+      customTopicMap.get(base.codigo) ?? DEFAULT_QUESTION_TOPIC_MAP[base.codigo] ?? null;
+    if (topicId) {
+      questionTopicMap.set(base.codigo, topicId);
+      topicQuestionCounts.set(topicId, (topicQuestionCounts.get(topicId) ?? 0) + 1);
+      if (needsErrorReview) {
+        topicErrorReviewCounts.set(topicId, (topicErrorReviewCounts.get(topicId) ?? 0) + 1);
+      }
+    }
+  }
+
+  const attemptsByTopic = new Map<string, typeof attempts>();
+  for (const a of attempts) {
+    const topicId = questionTopicMap.get(a.question_codigo);
+    if (!topicId) continue;
+    const list = attemptsByTopic.get(topicId);
+    if (list) list.push(a);
+    else attemptsByTopic.set(topicId, [a]);
+  }
+
+  const topics: TopicPerformance[] = staticTopics.map((topic) => {
+    const topicAttempts = attemptsByTopic.get(topic.id) ?? [];
+    const totalTopicAttempts = topicAttempts.length;
+    const correctAttempts = topicAttempts.filter((a) => a.is_correct).length;
+    const wrongAttempts = totalTopicAttempts - correctAttempts;
+    const uniqueAnsweredQuestions = new Set(topicAttempts.map((a) => a.question_codigo)).size;
+    const totalQuestionsInTopic = topicQuestionCounts.get(topic.id) ?? 0;
+
+    const accuracyPercent =
+      totalTopicAttempts >= settings.minAnswersForTopicPercent
+        ? Number(((correctAttempts / totalTopicAttempts) * 100).toFixed(1))
+        : null;
+
+    const recentSlice = topicAttempts.slice(-5);
+    const recentAccuracyPercent =
+      recentSlice.length >= settings.minAnswersForTopicPercent
+        ? Number(
+            (
+              (recentSlice.filter((a) => a.is_correct).length / recentSlice.length) *
+              100
+            ).toFixed(1)
+          )
+        : null;
+
+    const timed = topicAttempts.filter((a) => a.time_spent_ms > 0);
+    const avgTimeMs =
+      timed.length > 0
+        ? Math.round(timed.reduce((acc, a) => acc + a.time_spent_ms, 0) / timed.length)
+        : null;
+
+    const mastery = computeMasteryLevel({
+      totalQuestionsInTopic,
+      uniqueAnsweredQuestions,
+      totalAttempts: totalTopicAttempts,
+      accuracyPercent,
+      recentAccuracyPercent,
+      recurringErrorQuestions: topicErrorReviewCounts.get(topic.id) ?? 0,
+    });
+
+    return {
+      topicId: topic.id,
+      topicName: topic.name,
+      totalQuestionsInTopic,
+      uniqueAnsweredQuestions,
+      totalAttempts: totalTopicAttempts,
+      correctAttempts,
+      wrongAttempts,
+      accuracyPercent,
+      avgTimeMs,
+      masteryLevel: mastery.level,
+      masteryReason: mastery.reason,
+      recentAccuracyPercent,
+    };
+  });
+
+  const totalQuestions = sourceQuestions.length;
   const unansweredUnique = totalQuestions - answeredUnique;
   const totalAttempts = attempts.length;
   const totalCorrect = attempts.filter((a) => a.is_correct).length;
@@ -1147,14 +1297,6 @@ export async function cloudGetDashboardAnalytics(supabase: SupabaseClient) {
     .sort((a, b) => (a.accuracyPercent ?? 0) - (b.accuracyPercent ?? 0))
     .slice(0, 3);
 
-  const errorReviewQuestions = questions.filter((q) => q.progress.needsErrorReview);
-  const nowIso = new Date().toISOString();
-  const dueSpacedReview = questions.filter(
-    (q) =>
-      q.progress.spacedRepetition?.nextReviewAt &&
-      q.progress.spacedRepetition.nextReviewAt <= nowIso
-  );
-
   const lastAttempt = attempts.length > 0 ? attempts[attempts.length - 1] : null;
   const continueActivity = inProgressExam
     ? {
@@ -1166,18 +1308,17 @@ export async function cloudGetDashboardAnalytics(supabase: SupabaseClient) {
       }
     : lastAttempt
       ? (() => {
-          const q = questions.find((item) => item.codigo === lastAttempt.question_codigo);
-          const nextUnanswered = questions.find((item) => item.progress.attemptsCount === 0);
+          const q = sourceQuestions.find((item) => item.codigo === lastAttempt.question_codigo);
           return {
             type: 'study' as const,
-            title: nextUnanswered
-              ? `Continuar na questão #${nextUnanswered.numero} (${nextUnanswered.codigo})`
+            title: firstUnanswered
+              ? `Continuar na questão #${firstUnanswered.numero} (${firstUnanswered.codigo})`
               : `Última questão estudada: #${q?.numero ?? ''} (${lastAttempt.question_codigo})`,
-            subtitle: nextUnanswered
+            subtitle: firstUnanswered
               ? `${unansweredUnique} questão(ões) ainda não respondida(s) no banco`
               : `Você já respondeu todas as ${totalQuestions} questões ao menos uma vez`,
-            href: nextUnanswered
-              ? `/estudar?codigo=${nextUnanswered.codigo}`
+            href: firstUnanswered
+              ? `/estudar?codigo=${firstUnanswered.codigo}`
               : `/estudar?codigo=${lastAttempt.question_codigo}`,
             cta: 'Continuar estudando',
           };
@@ -1185,12 +1326,12 @@ export async function cloudGetDashboardAnalytics(supabase: SupabaseClient) {
       : null;
 
   const recommendations: StudyRecommendation[] = [];
-  if (errorReviewQuestions.length > 0) {
+  if (errorReviewCount > 0) {
     recommendations.push({
       id: 'rec-errors',
       priority: 'high',
       category: 'errors',
-      title: `${errorReviewQuestions.length} questão(ões) pendente(s) na revisão de erros`,
+      title: `${errorReviewCount} questão(ões) pendente(s) na revisão de erros`,
       description: 'Refaça as questões em que houve erro recente até atingir a sequência de acertos.',
       actionLabel: 'Revisar erros agora',
       actionHref: '/revisao',
@@ -1208,12 +1349,12 @@ export async function cloudGetDashboardAnalytics(supabase: SupabaseClient) {
       actionHref: `/estudar?topic=${worst.topicId}`,
     });
   }
-  if (dueSpacedReview.length > 0) {
+  if (dueSpacedReviewCount > 0) {
     recommendations.push({
       id: 'rec-spaced',
       priority: 'medium',
       category: 'spaced_review',
-      title: `${dueSpacedReview.length} questão(ões) pronta(s) para revisão espaçada`,
+      title: `${dueSpacedReviewCount} questão(ões) pronta(s) para revisão espaçada`,
       description: 'O intervalo ideal de memorização venceu para essas questões.',
       actionLabel: 'Abrir revisão espaçada',
       actionHref: '/revisao?tab=espacada',
@@ -1246,9 +1387,9 @@ export async function cloudGetDashboardAnalytics(supabase: SupabaseClient) {
       latestExamDate: latestExam ? latestExam.finishedAt : null,
       totalStudyTimeMs,
       studyStreakDays,
-      favoritesCount: questions.filter((q) => q.progress.isFavorite).length,
-      errorReviewCount: errorReviewQuestions.length,
-      dueSpacedReviewCount: dueSpacedReview.length,
+      favoritesCount,
+      errorReviewCount,
+      dueSpacedReviewCount,
     },
     continueActivity,
     bestTopics,

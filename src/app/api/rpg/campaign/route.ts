@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { isRpgModuleEnabled } from '@/lib/rpg/feature-flag';
 import {
   getOrCreateCampaignSnapshot,
+  getRegionQuestionBundle,
   markRpgDialogueSeen,
   resetRpgCampaign,
   switchRpgRegion,
@@ -26,7 +27,13 @@ export async function GET() {
     if (!user) return NextResponse.json({ error: 'Não autenticado.' }, { status: 401 });
 
     const snapshot = await getOrCreateCampaignSnapshot(supabase, user.id);
-    return NextResponse.json(snapshot);
+    const mapCodes = snapshot.currentMap.graph.nodes
+      .map((n) => n.questionCodigo)
+      .filter((c): c is string => Boolean(c));
+    return NextResponse.json({
+      ...snapshot,
+      regionQuestionPool: getRegionQuestionBundle(snapshot.campaign.currentRegionIndex, mapCodes),
+    });
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Erro ao carregar campanha RPG.' },
@@ -53,7 +60,10 @@ export async function PATCH(request: NextRequest) {
         ? await markRpgDialogueSeen(supabase, user.id, parsed.data.dialogueId)
         : await switchRpgRegion(supabase, user.id, parsed.data.regionIndex);
 
-    return NextResponse.json(snapshot);
+    return NextResponse.json({
+      ...snapshot,
+      regionQuestionPool: getRegionQuestionBundle(snapshot.campaign.currentRegionIndex),
+    });
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Erro ao atualizar campanha.' },
@@ -76,7 +86,10 @@ export async function POST(request: NextRequest) {
     }
 
     const snapshot = await resetRpgCampaign(supabase, user.id);
-    return NextResponse.json(snapshot);
+    return NextResponse.json({
+      ...snapshot,
+      regionQuestionPool: getRegionQuestionBundle(snapshot.campaign.currentRegionIndex),
+    });
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Erro ao reiniciar jornada.' },

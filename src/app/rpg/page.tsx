@@ -27,8 +27,14 @@ import { PartyAndCheckpointModal } from '@/components/rpg/PartyAndCheckpointModa
 import { RegionMapCanvas } from '@/components/rpg/RegionMapCanvas';
 import { RewardChestModal } from '@/components/rpg/RewardChestModal';
 import { HeroSprite, ItemIcon } from '@/components/rpg/RpgArtwork';
-import { RpgChallengeModal, type ActiveQuestionPayload } from '@/components/rpg/RpgChallengeModal';
+import {
+  RpgChallengeModal,
+  type ActiveQuestionPayload,
+  type SafeClientQuestion,
+} from '@/components/rpg/RpgChallengeModal';
 import { VisualNovelOverlay } from '@/components/rpg/VisualNovelOverlay';
+import { getEventById } from '@/lib/rpg/data/events';
+import { getRegionIntroDialogue } from '@/lib/rpg/data/dialogues';
 import {
   getRpgMusicVolume,
   isRpgMusicEnabled,
@@ -42,7 +48,69 @@ import {
 } from '@/lib/rpg/audio';
 import { isRpgModuleEnabled } from '@/lib/rpg/feature-flag';
 import { cn } from '@/lib/utils';
-import type { RpgCampaignSnapshot, RpgEventDefinition, RpgMapNode } from '@/types/rpg';
+import type {
+  RpgCampaignSnapshot,
+  RpgEventDefinition,
+  RpgMapNode,
+  RpgRegionId,
+  RpgStageEnemy,
+} from '@/types/rpg';
+
+function buildLocalStageEnemies(
+  regionId: RpgRegionId,
+  isElite: boolean,
+  regionIndex: number,
+  nodeLevel: number
+): RpgStageEnemy[] {
+  const levelStep = Math.max(0, nodeLevel - 2);
+  const hpScale = regionIndex * 18 + levelStep * 5;
+  const atkScale = regionIndex * 5 + Math.floor(levelStep * 1.5);
+  const hasThirdEnemy = isElite || nodeLevel >= 6 || regionIndex >= 2;
+
+  const roster: Record<
+    RpgRegionId,
+    Array<{ name: string; sprite: string; hpBase: number; atkBase: number; elite?: boolean }>
+  > = {
+    'gruta-esquecida': [
+      { name: 'Slime da Caverna', sprite: 'slime.png', hpBase: 32, atkBase: 28 },
+      { name: 'Morcego Sombrio', sprite: 'bat.png', hpBase: 28, atkBase: 30 },
+      { name: 'Guardião da Gruta', sprite: 'guardian.png', hpBase: 46, atkBase: 34, elite: true },
+    ],
+    'caverna-assombrada': [
+      { name: 'Esqueleto Guerreiro', sprite: 'skeleton.png', hpBase: 38, atkBase: 31 },
+      { name: 'Morcego Sombrio', sprite: 'bat.png', hpBase: 32, atkBase: 30 },
+      { name: 'Aranha Amaldiçoada', sprite: 'spider.png', hpBase: 50, atkBase: 36, elite: true },
+    ],
+    'caverna-de-fogo': [
+      { name: 'Imp de Fogo', sprite: 'fire-imp.png', hpBase: 42, atkBase: 34 },
+      { name: 'Aranha de Magma', sprite: 'spider.png', hpBase: 38, atkBase: 33 },
+      { name: 'Besta das Cinzas', sprite: 'forest-beast.png', hpBase: 58, atkBase: 39, elite: true },
+    ],
+    'dungeon-de-gelo': [
+      { name: 'Esqueleto Ártico', sprite: 'skeleton.png', hpBase: 46, atkBase: 36 },
+      { name: 'Golem de Gelo', sprite: 'ice-golem.png', hpBase: 52, atkBase: 38 },
+      { name: 'Guardião Glacial', sprite: 'guardian.png', hpBase: 66, atkBase: 42, elite: true },
+    ],
+  };
+
+  const templates = roster[regionId] ?? roster['gruta-esquecida'];
+  const selected = hasThirdEnemy ? templates : templates.slice(0, 2);
+
+  return selected.map((t, idx) => {
+    const eliteMult = isElite ? 1.2 : 1;
+    const maxHp = Math.round((t.hpBase + hpScale) * eliteMult);
+    const attackDamage = Math.round((t.atkBase + atkScale) * (isElite ? 1.12 : 1));
+    return {
+      id: `e${idx + 1}`,
+      name: t.name,
+      sprite: t.sprite,
+      isElite: Boolean(t.elite || isElite),
+      maxHp,
+      currentHp: maxHp,
+      attackDamage,
+    };
+  });
+}
 
 export default function RpgJornadaPage() {
   const enabled = isRpgModuleEnabled();
@@ -55,6 +123,8 @@ export default function RpgJornadaPage() {
   const [musicVol, setMusicVol] = useState(0.35);
 
   const [activeQuestion, setActiveQuestion] = useState<ActiveQuestionPayload | null>(null);
+  const [activeQuestionSyncPromise, setActiveQuestionSyncPromise] = useState<Promise<unknown> | undefined>(undefined);
+  const [regionQuestionPool, setRegionQuestionPool] = useState<SafeClientQuestion[]>([]);
   const [activeEvent, setActiveEvent] = useState<{
     node: RpgMapNode;
     event?: RpgEventDefinition;
@@ -88,6 +158,9 @@ export default function RpgJornadaPage() {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Falha ao carregar Jornada do Herói.');
         setSnapshot(data);
+        if (Array.isArray(data.regionQuestionPool)) {
+          setRegionQuestionPool(data.regionQuestionPool);
+        }
         if (data.activeBossBattle && data.activeBossBattle.status === 'in_progress') {
           setShowBossArena(true);
         }
@@ -156,59 +229,170 @@ export default function RpgJornadaPage() {
   const partyMaxHp = Math.max(1, equippedHeroes.reduce((a, h) => a + h.maxHp, 0));
   const partyHpPct = Math.round((partyHp / partyMaxHp) * 100);
 
-  const handleDismissDialogue = async () => {
+  const handleDismissDialogue = () => {
     if (!pendingDialogue) return;
-    const res = await fetch('/api/rpg/campaign', {
+    const dialogueId = pendingDialogue.id;
+    // Fecha diálogo em 0ms (Local-First) e sincroniza em background
+    setSnapshot((prev) =>
+      prev
+        ? {
+            ...prev,
+            pendingDialogue: null,
+            campaign: {
+              ...prev.campaign,
+              seenDialogueIds: prev.campaign.seenDialogueIds.includes(dialogueId)
+                ? prev.campaign.seenDialogueIds
+                : [...prev.campaign.seenDialogueIds, dialogueId],
+            },
+          }
+        : prev
+    );
+    void fetch('/api/rpg/campaign', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'seen_dialogue', dialogueId: pendingDialogue.id }),
+      body: JSON.stringify({ action: 'seen_dialogue', dialogueId }),
     });
-    if (res.ok) setSnapshot(await res.json());
   };
 
-  const handleSwitchRegion = async (regionIndex: number) => {
+  const handleSwitchRegion = (regionIndex: number) => {
     if (regionIndex > campaign.unlockedRegionIndex || regionIndex === campaign.currentRegionIndex) return;
     setError(null);
     playRpgSfx('step');
-    const res = await fetch('/api/rpg/campaign', {
+    setShowBossArena(false);
+
+    // Troca de mapa em 0ms usando os mapas já em memória + sync em background
+    const targetMap = snapshot.regionMaps.find((m) => m.regionIndex === regionIndex);
+    const targetRegion = regions[regionIndex];
+    if (targetMap && targetRegion) {
+      const nextCompleted =
+        targetMap.completedNodeIds.length > 0 ? targetMap.completedNodeIds : [targetMap.graph.startNodeId];
+      const lastCompleted = nextCompleted[nextCompleted.length - 1] ?? targetMap.graph.startNodeId;
+      const introScene = getRegionIntroDialogue(targetRegion.id);
+      setSnapshot((prev) =>
+        prev
+          ? {
+              ...prev,
+              campaign: {
+                ...prev.campaign,
+                currentRegionIndex: regionIndex,
+                currentNodeId: lastCompleted,
+              },
+              currentMap: { ...targetMap, completedNodeIds: nextCompleted },
+              pendingDialogue: prev.campaign.seenDialogueIds.includes(introScene.id) ? null : introScene,
+            }
+          : prev
+      );
+    }
+
+    void fetch('/api/rpg/campaign', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'switch_region', regionIndex }),
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      setError(data.error || 'Não foi possível trocar de região.');
-      return;
-    }
-    setShowBossArena(false);
-    setSnapshot(data);
+    })
+      .then(async (res) => {
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Não foi possível trocar de região.');
+        if (Array.isArray(data.regionQuestionPool)) {
+          setRegionQuestionPool(data.regionQuestionPool);
+        }
+        setSnapshot(data);
+      })
+      .catch((e) => setError(e instanceof Error ? e.message : 'Não foi possível trocar de região.'));
   };
 
   const handleSelectNode = async (node: RpgMapNode) => {
-    setBusyNode(true);
     setError(null);
     playRpgSfx('step');
-    try {
-      const res = await fetch('/api/rpg/node/select', {
+
+    // Atualiza posição do herói imediatamente (0ms)
+    setSnapshot((prev) =>
+      prev
+        ? {
+            ...prev,
+            campaign: { ...prev.campaign, currentNodeId: node.id },
+          }
+        : prev
+    );
+
+    const syncNodeSelect = () =>
+      fetch('/api/rpg/node/select', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nodeId: node.id }),
+      }).then(async (res) => {
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Não foi possível acessar este nó.');
+        if (data.snapshot) setSnapshot(data.snapshot);
+        return data;
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Não foi possível acessar este nó.');
 
-      setSnapshot(data.snapshot);
+    // 1. CHECKPOINT -> abre em 0ms + sync em background
+    if (node.type === 'checkpoint') {
+      playRpgSfx('heal_chime');
+      setPartyModalMode('checkpoint');
+      void syncNodeSelect().catch((e) => setError(e instanceof Error ? e.message : 'Erro ao sincronizar checkpoint.'));
+      return;
+    }
 
+    // 2. EVENTO / GAP -> abre em 0ms + sync em background
+    if (node.type === 'event' || node.type === 'gap') {
+      const localEvent = getEventById(node.eventId ?? '');
+      setActiveEvent({ node, event: localEvent });
+      void syncNodeSelect().catch((e) => setError(e instanceof Error ? e.message : 'Erro ao sincronizar evento.'));
+      return;
+    }
+
+    // 3. COMBATE (QUESTÃO / ELITE) -> abre em < 5ms usando o pool pré-carregado + sync em background!
+    if ((node.type === 'question' || node.type === 'special') && regionQuestionPool.length > 0) {
+      const firstQ =
+        regionQuestionPool.find((q) => q.codigo === node.questionCodigo) ??
+        regionQuestionPool[Math.floor(Math.random() * regionQuestionPool.length)];
+      const localEncounter = {
+        nodeId: node.id,
+        status: 'in_progress' as const,
+        phase: 'hero_turn' as const,
+        attackingEnemyId: null,
+        turnTimeLimitSec: null,
+        turnStartedAt: null,
+        turnNumber: 1,
+        enemies: buildLocalStageEnemies(
+          currentRegion.id,
+          node.type === 'special',
+          campaign.currentRegionIndex,
+          node.level
+        ),
+        currentQuestionCodigo: firstQ.codigo,
+        usedQuestionCodes: [firstQ.codigo],
+      };
+
+      const syncPromise = syncNodeSelect().catch((e) => {
+        setError(e instanceof Error ? e.message : 'Erro ao sincronizar combate.');
+      });
+      setActiveQuestionSyncPromise(syncPromise);
+      setActiveQuestion({
+        node,
+        question: firstQ,
+        questionPool: regionQuestionPool,
+        encounter: localEncounter,
+      });
+      return;
+    }
+
+    // 4. Fallback síncrono (Baú de mapa, Chefe, ou pool ainda vazio)
+    setBusyNode(true);
+    try {
+      const data = await syncNodeSelect();
       if (node.type === 'question' || node.type === 'special') {
-        setActiveQuestion({ node, question: data.question, encounter: data.encounter });
-      } else if (node.type === 'event' || node.type === 'gap') {
-        setActiveEvent({ node, event: data.event });
+        setActiveQuestionSyncPromise(undefined);
+        setActiveQuestion({
+          node,
+          question: data.question,
+          questionPool: data.questionPool ?? regionQuestionPool,
+          encounter: data.encounter,
+        });
       } else if (node.type === 'chest') {
         playRpgSfx('chest_open');
         setActiveEvent({ node, chestReward: data.chestReward });
-      } else if (node.type === 'checkpoint') {
-        playRpgSfx('heal_chime');
-        setPartyModalMode('checkpoint');
       } else if (node.type === 'boss') {
         setShowBossArena(true);
       }
@@ -763,9 +947,11 @@ export default function RpgJornadaPage() {
           payload={activeQuestion}
           region={currentRegion}
           equippedHeroes={equippedHeroes}
+          activeEffects={campaign.activeEffects}
           hintsRemaining={campaign.hintsRemaining}
           gold={campaign.gold}
           inventory={inventory}
+          initialSyncPromise={activeQuestionSyncPromise}
           onSnapshotUpdate={setSnapshot}
           onOpenRewardChest={(nodeId, style) => {
             setActiveQuestion(null);

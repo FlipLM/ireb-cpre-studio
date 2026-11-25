@@ -12,6 +12,7 @@ const bodySchema = z.object({
   selectedAnswers: z.array(z.string().min(1)).default([]),
   targetEnemyId: z.string().optional(),
   timedOut: z.boolean().optional().default(false),
+  nextQuestionCodigo: z.string().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -33,7 +34,8 @@ export async function POST(request: NextRequest) {
       parsed.data.nodeId,
       parsed.data.selectedAnswers,
       parsed.data.targetEnemyId,
-      parsed.data.timedOut
+      parsed.data.timedOut,
+      parsed.data.nextQuestionCodigo
     );
     return NextResponse.json(result);
   } catch (error) {

@@ -11,6 +11,18 @@ import type {
   RpgRegionMapState,
 } from '@/types/rpg';
 
+function useIsMobileViewport(): boolean {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)');
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
+  return isMobile;
+}
+
 const DESKTOP_VB_W = 1600;
 const DESKTOP_VB_H = 800;
 
@@ -109,18 +121,18 @@ function AnimatedCavernFloor({
         }}
       />
 
-      {/* Camada 2: Bolsões sutis de luz ambiente pulsando lentamente no piso */}
+      {/* Camada 2: Bolsões sutis de luz ambiente via radial-gradient puro (zero filter:blur na GPU) */}
       {GLOW_POOLS.map((pool, idx) => (
         <div
           key={`glow-${idx}`}
-          className="absolute rounded-full blur-3xl animate-rpg-floor-breathe"
+          className="absolute rounded-full animate-rpg-floor-breathe"
           style={{
             left: `${pool.left}%`,
             top: `${pool.top}%`,
-            width: pool.size,
-            height: pool.size,
+            width: pool.size * 1.4,
+            height: pool.size * 1.4,
             transform: 'translate(-50%, -50%)',
-            background: `radial-gradient(circle, ${idx % 2 === 0 ? fx.glowA : fx.glowB} 0%, transparent 72%)`,
+            background: `radial-gradient(circle, ${idx % 2 === 0 ? fx.glowA : fx.glowB} 0%, transparent 68%)`,
             animationDelay: `${pool.delay}s`,
           }}
         />
@@ -261,27 +273,30 @@ export function RegionMapCanvas({
   const nodeById = new Map(graph.nodes.map((n) => [n.id, n]));
   const [hoveredNode, setHoveredNode] = useState<RpgMapNode | null>(null);
   const mobileCurrentRef = useRef<HTMLDivElement | null>(null);
+  const isMobile = useIsMobileViewport();
 
   // No mobile, centraliza suavemente a câmera vertical no nó atual ao carregar/avançar
   useEffect(() => {
+    if (!isMobile) return;
     const el = mobileCurrentRef.current;
     if (!el) return;
     const timer = window.setTimeout(() => {
       el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }, 120);
+    }, 100);
     return () => window.clearTimeout(timer);
-  }, [currentNodeId, region.id]);
+  }, [currentNodeId, region.id, isMobile]);
 
   return (
     <div className="relative w-full h-full overflow-hidden bg-[#0b0910] select-none">
-      {/* =====================================================================
+      {!isMobile ? (
+      /* =====================================================================
           VERSÃO DESKTOP (md+): Mapa Horizontal sobre Piso de Caverna Animado
-      ===================================================================== */}
-      <div className="hidden md:block relative w-full h-full overflow-hidden">
+      ===================================================================== */
+      <div className="relative w-full h-full overflow-hidden">
         <AnimatedCavernFloor region={region} variant="desktop" />
 
         {/* Título da Região no canto superior esquerdo */}
-        <div className="absolute top-4 left-5 z-20 px-4 py-2 rounded-xl bg-[#141018]/90 border-2 border-[#c9974b]/80 backdrop-blur-xs shadow-xl pointer-events-none">
+        <div className="absolute top-4 left-5 z-20 px-4 py-2 rounded-xl bg-[#141018]/94 border-2 border-[#c9974b]/80 shadow-xl pointer-events-none">
           <div className="text-[11px] font-extrabold uppercase tracking-[0.2em] text-[#f7dc94]">
             Região {region.index + 1} • Níveis {region.levelRange[0]}–{region.levelRange[1]}
           </div>
@@ -292,7 +307,7 @@ export function RegionMapCanvas({
 
         {/* Tooltip contextual no canto inferior esquerdo */}
         {hoveredNode && (
-          <div className="absolute bottom-4 left-5 z-20 px-4 py-2.5 rounded-xl bg-[#141018]/95 border-2 border-[#f5c451] backdrop-blur-xs shadow-2xl pointer-events-none animate-card-enter max-w-md">
+          <div className="absolute bottom-4 left-5 z-20 px-4 py-2.5 rounded-xl bg-[#141018]/96 border-2 border-[#f5c451] shadow-2xl pointer-events-none max-w-md">
             <div className="text-sm font-extrabold text-[#fde68a]">
               Nível {hoveredNode.globalLevel} — {hoveredNode.label}
             </div>
@@ -347,7 +362,6 @@ export function RegionMapCanvas({
                   strokeWidth={isAvailableEdge ? 7 : isDoneEdge ? 6 : 4.5}
                   strokeLinecap="round"
                   strokeDasharray="1 16"
-                  className={isAvailableEdge ? 'animate-rpg-dash' : undefined}
                 />
               );
             })
@@ -375,10 +389,10 @@ export function RegionMapCanvas({
             >
               {isCurrent && (
                 <div
-                  className="pointer-events-none absolute left-1/2 top-1/2 w-36 h-36 rounded-full blur-2xl animate-rpg-torch -z-10"
+                  className="pointer-events-none absolute left-1/2 top-1/2 w-40 h-40 rounded-full animate-rpg-torch -z-10"
                   style={{
                     background:
-                      'radial-gradient(circle, rgba(245, 196, 81, 0.45) 0%, transparent 70%)',
+                      'radial-gradient(circle, rgba(245, 196, 81, 0.35) 0%, transparent 66%)',
                   }}
                 />
               )}
@@ -400,13 +414,13 @@ export function RegionMapCanvas({
                 onClick={() => isClickable && onSelectNode(node)}
                 style={{ width: sizePx, height: sizePx }}
                 className={cn(
-                  'rpg-hex flex items-center justify-center transition-all relative p-[3.5px]',
+                  'rpg-hex flex items-center justify-center transition-transform relative p-[3.5px]',
                   isClickable && 'cursor-pointer hover:scale-115 active:scale-95',
                   !isClickable && 'cursor-default',
-                  isAvailable && 'bg-[#f5c451] shadow-[0_0_28px_rgba(245,196,81,0.9)]',
+                  isAvailable && 'bg-[#f5c451] shadow-[0_0_24px_rgba(245,196,81,0.85)]',
                   isCompleted && node.type !== 'checkpoint' && 'bg-emerald-400',
                   node.type === 'checkpoint' && (isCompleted || isAvailable) && 'bg-sky-400',
-                  isBoss && isAvailable && 'bg-rose-500 shadow-[0_0_36px_rgba(244,63,94,0.95)]',
+                  isBoss && isAvailable && 'bg-rose-500 shadow-[0_0_32px_rgba(244,63,94,0.9)]',
                   isLocked && 'bg-slate-500/85 opacity-85'
                 )}
               >
@@ -450,14 +464,14 @@ export function RegionMapCanvas({
           );
         })}
       </div>
-
-      {/* =====================================================================
+      ) : (
+      /* =====================================================================
           VERSÃO MOBILE (< md): Árvore Vertical sobre Piso de Caverna Animado
-      ===================================================================== */}
-      <div className="md:hidden relative w-full h-full overflow-y-auto overflow-x-hidden scroll-smooth">
+      ===================================================================== */
+      <div className="relative w-full h-full overflow-y-auto overflow-x-hidden scroll-smooth">
         {/* Banner flutuante compacto da região no topo */}
         <div className="sticky top-2.5 z-30 flex justify-center px-3 pointer-events-none">
-          <div className="px-3.5 py-1.5 rounded-full bg-[#141018]/90 border border-[#c9974b]/85 backdrop-blur-xs shadow-xl flex items-center gap-2">
+          <div className="px-3.5 py-1.5 rounded-full bg-[#141018]/94 border border-[#c9974b]/85 shadow-xl flex items-center gap-2">
             <span className="text-[10px] font-black uppercase tracking-[0.16em] text-[#f5c451]">
               Região {region.index + 1}
             </span>
@@ -510,7 +524,6 @@ export function RegionMapCanvas({
                     strokeWidth={isAvailableEdge ? 5.5 : isDoneEdge ? 4.5 : 3.5}
                     strokeLinecap="round"
                     strokeDasharray="1 13"
-                    className={isAvailableEdge ? 'animate-rpg-dash' : undefined}
                   />
                 );
               })
@@ -539,10 +552,10 @@ export function RegionMapCanvas({
               >
                 {isCurrent && (
                   <div
-                    className="pointer-events-none absolute left-1/2 top-1/2 w-28 h-28 rounded-full blur-2xl animate-rpg-torch -z-10"
+                    className="pointer-events-none absolute left-1/2 top-1/2 w-32 h-32 rounded-full animate-rpg-torch -z-10"
                     style={{
                       background:
-                        'radial-gradient(circle, rgba(245, 196, 81, 0.45) 0%, transparent 70%)',
+                        'radial-gradient(circle, rgba(245, 196, 81, 0.35) 0%, transparent 66%)',
                     }}
                   />
                 )}
@@ -562,13 +575,13 @@ export function RegionMapCanvas({
                   onClick={() => isClickable && onSelectNode(node)}
                   style={{ width: sizePx, height: sizePx }}
                   className={cn(
-                    'rpg-hex flex items-center justify-center transition-all relative p-[3px]',
+                    'rpg-hex flex items-center justify-center transition-transform relative p-[3px]',
                     isClickable && 'cursor-pointer active:scale-90',
                     !isClickable && 'cursor-default',
-                    isAvailable && 'bg-[#f5c451] shadow-[0_0_24px_rgba(245,196,81,0.9)]',
+                    isAvailable && 'bg-[#f5c451] shadow-[0_0_20px_rgba(245,196,81,0.85)]',
                     isCompleted && node.type !== 'checkpoint' && 'bg-emerald-400',
                     node.type === 'checkpoint' && (isCompleted || isAvailable) && 'bg-sky-400',
-                    isBoss && isAvailable && 'bg-rose-500 shadow-[0_0_32px_rgba(244,63,94,0.95)]',
+                    isBoss && isAvailable && 'bg-rose-500 shadow-[0_0_28px_rgba(244,63,94,0.9)]',
                     isLocked && 'bg-slate-500/85 opacity-85'
                   )}
                 >
@@ -615,6 +628,7 @@ export function RegionMapCanvas({
           })}
         </div>
       </div>
+      )}
     </div>
   );
 }

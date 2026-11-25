@@ -28,9 +28,12 @@ let ctx: AudioContext | null = null;
 let pulse25Wave: PeriodicWave | null = null;
 let pulse12Wave: PeriodicWave | null = null;
 let reverbSend: GainNode | null = null;
+let sharedNoiseBuffer: AudioBuffer | null = null;
 let musicTimer: number | null = null;
 let currentTrack: RpgMusicTrack | null = null;
 let stepIndex = 0;
+let cachedMusicEnabled: boolean | null = null;
+let cachedMusicVolume: number | null = null;
 
 /**
  * Cria formas de onda Pulse autênticas de consoles 8-bit/16-bit (NES/SNES/GBA)
@@ -79,6 +82,14 @@ function getCtx(): AudioContext | null {
     fb.connect(delay);
     lp.connect(wet);
     wet.connect(ctx.destination);
+
+    // Buffer de ruído reutilizável (evita alocar AudioBuffer + Math.random a cada batida)
+    const noiseLen = Math.floor(ctx.sampleRate * 0.3);
+    sharedNoiseBuffer = ctx.createBuffer(1, noiseLen, ctx.sampleRate);
+    const ch = sharedNoiseBuffer.getChannelData(0);
+    for (let i = 0; i < noiseLen; i++) {
+      ch[i] = Math.random() * 2 - 1;
+    }
   }
   if (ctx.state === 'suspended') {
     void ctx.resume();
@@ -88,11 +99,14 @@ function getCtx(): AudioContext | null {
 
 export function isRpgMusicEnabled(): boolean {
   if (typeof window === 'undefined') return true;
+  if (cachedMusicEnabled !== null) return cachedMusicEnabled;
   const raw = window.localStorage.getItem(MUSIC_ENABLED_KEY);
-  return raw === null ? true : raw === 'true';
+  cachedMusicEnabled = raw === null ? true : raw === 'true';
+  return cachedMusicEnabled;
 }
 
 export function setRpgMusicEnabled(enabled: boolean): void {
+  cachedMusicEnabled = enabled;
   if (typeof window === 'undefined') return;
   window.localStorage.setItem(MUSIC_ENABLED_KEY, enabled ? 'true' : 'false');
   if (!enabled) stopRpgMusic();
@@ -100,13 +114,16 @@ export function setRpgMusicEnabled(enabled: boolean): void {
 
 export function getRpgMusicVolume(): number {
   if (typeof window === 'undefined') return 0.45;
+  if (cachedMusicVolume !== null) return cachedMusicVolume;
   const raw = Number(window.localStorage.getItem(MUSIC_VOLUME_KEY));
-  return Number.isFinite(raw) && raw >= 0 && raw <= 1 ? raw : 0.45;
+  cachedMusicVolume = Number.isFinite(raw) && raw >= 0 && raw <= 1 ? raw : 0.45;
+  return cachedMusicVolume;
 }
 
 export function setRpgMusicVolume(vol: number): void {
-  if (typeof window === 'undefined') return;
   const clamped = Math.max(0, Math.min(1, vol));
+  cachedMusicVolume = clamped;
+  if (typeof window === 'undefined') return;
   window.localStorage.setItem(MUSIC_VOLUME_KEY, String(clamped));
 }
 
@@ -170,6 +187,12 @@ function playChipNote(
     gain.connect(reverbSend);
   }
 
+  osc.onended = () => {
+    osc.disconnect();
+    if (tail !== osc) tail.disconnect();
+    gain.disconnect();
+  };
+
   osc.start(now);
   osc.stop(now + duration + 0.05);
 }
@@ -181,27 +204,25 @@ function playChipNoise(
   gainPeak: number,
   bandFreq: number
 ) {
-  const len = Math.max(1, Math.floor(audioCtx.sampleRate * duration));
-  const buf = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
-  const data = buf.getChannelData(0);
-  // Ruído quantizado estilo chip NES
-  let hold = 0;
-  for (let i = 0; i < len; i++) {
-    if (i % 3 === 0) hold = Math.random() * 2 - 1;
-    data[i] = hold * Math.pow(1 - i / len, 1.5);
-  }
+  if (!sharedNoiseBuffer) return;
+  const now = audioCtx.currentTime + offset;
   const src = audioCtx.createBufferSource();
-  src.buffer = buf;
+  src.buffer = sharedNoiseBuffer;
   const filter = audioCtx.createBiquadFilter();
   filter.type = 'bandpass';
   filter.frequency.value = bandFreq;
   const gain = audioCtx.createGain();
-  gain.gain.setValueAtTime(Math.max(0.0002, gainPeak), audioCtx.currentTime + offset);
-  gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + offset + duration);
+  gain.gain.setValueAtTime(Math.max(0.0002, gainPeak), now);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
   src.connect(filter);
   filter.connect(gain);
   gain.connect(audioCtx.destination);
-  src.start(audioCtx.currentTime + offset);
+  src.onended = () => {
+    src.disconnect();
+    filter.disconnect();
+    gain.disconnect();
+  };
+  src.start(now, 0, Math.min(duration, sharedNoiseBuffer.duration));
 }
 
 /**

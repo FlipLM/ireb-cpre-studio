@@ -128,7 +128,55 @@ function toSafeClientQuestion(codigo: string) {
     quantidade_respostas: q.quantidade_respostas,
     alternativas: q.alternativas,
     managedImageUrl: q.managedImageUrl,
+    correctAnswers: Array.isArray(q.resposta_correta) ? q.resposta_correta : [q.resposta_correta],
+    explanation: q.explicacao,
   };
+}
+
+export function getRegionQuestionBundle(regionIndex: number, mapNodeCodes: string[] = [], limit = 28) {
+  const region = getRegionByIndex(regionIndex);
+  const all = loadStaticSourceQuestions();
+  const byCode = new Map(all.map((q) => [q.codigo, q]));
+  const picked = new Map<string, ReturnType<typeof toSafeClientQuestion>>();
+
+  for (const code of mapNodeCodes) {
+    if (code && byCode.has(code) && !picked.has(code)) {
+      picked.set(code, toSafeClientQuestion(code));
+    }
+  }
+
+  const matching = all.filter((q) =>
+    region.topicIds.includes(DEFAULT_QUESTION_TOPIC_MAP[q.codigo] ?? '')
+  );
+  const source = matching.length > 0 ? matching : all;
+  for (const q of source) {
+    if (picked.size >= limit) break;
+    if (!picked.has(q.codigo)) {
+      picked.set(q.codigo, toSafeClientQuestion(q.codigo));
+    }
+  }
+  return Array.from(picked.values());
+}
+
+export function buildClientSafeStageEnemies(
+  regionId: RpgRegionId,
+  isElite: boolean,
+  regionIndex: number,
+  nodeLevel: number
+): RpgStageEnemy[] {
+  return buildStageEnemies(regionId, isElite, regionIndex, nodeLevel);
+}
+
+function buildRegionQuestionPool(regionIndex: number, excludeCodes: string[], count = 6) {
+  const region = getRegionByIndex(regionIndex);
+  const all = loadStaticSourceQuestions();
+  const used = new Set(excludeCodes);
+  const matching = all.filter(
+    (q) => !used.has(q.codigo) && region.topicIds.includes(DEFAULT_QUESTION_TOPIC_MAP[q.codigo] ?? '')
+  );
+  const source = matching.length >= count ? matching : all.filter((q) => !used.has(q.codigo));
+  const shuffled = [...source].sort(() => Math.random() - 0.5).slice(0, count);
+  return shuffled.map((q) => toSafeClientQuestion(q.codigo));
 }
 
 function mapCampaignRow(row: Record<string, unknown>): RpgCampaignState {
@@ -249,20 +297,27 @@ async function awardXpToEquippedHeroes(
 ): Promise<{ levelsGainedTotal: number }> {
   if (xpGain <= 0) return { levelsGainedTotal: 0 };
   let levelsGainedTotal = 0;
+  const nowIso = new Date().toISOString();
 
-  for (const hero of equippedHeroes) {
-    const { updated, levelsGained } = applyXpToHero(hero, xpGain);
-    levelsGainedTotal += levelsGained;
-    await supabase
-      .from('rpg_heroes')
-      .update({
-        level: updated.level,
-        xp: updated.xp,
-        unspent_stat_points: updated.unspentStatPoints,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', hero.id);
-  }
+  await Promise.all(
+    equippedHeroes.map((hero) => {
+      const { updated, levelsGained } = applyXpToHero(hero, xpGain);
+      levelsGainedTotal += levelsGained;
+      hero.level = updated.level;
+      hero.xp = updated.xp;
+      hero.xpToNextLevel = computeXpForNextLevel(updated.level);
+      hero.unspentStatPoints = updated.unspentStatPoints;
+      return supabase
+        .from('rpg_heroes')
+        .update({
+          level: updated.level,
+          xp: updated.xp,
+          unspent_stat_points: updated.unspentStatPoints,
+          updated_at: nowIso,
+        })
+        .eq('id', hero.id);
+    })
+  );
 
   return { levelsGainedTotal };
 }
@@ -495,8 +550,12 @@ export async function markRpgDialogueSeen(
       .from('rpg_campaigns')
       .update({ seen_dialogues_json: nextSeen, updated_at: new Date().toISOString() })
       .eq('id', snapshot.campaign.id);
+    snapshot.campaign.seenDialogueIds = nextSeen;
   }
-  return getOrCreateCampaignSnapshot(supabase, userId);
+  const currentRegion = getRegionByIndex(snapshot.campaign.currentRegionIndex);
+  const introScene = getRegionIntroDialogue(currentRegion.id);
+  snapshot.pendingDialogue = snapshot.campaign.seenDialogueIds.includes(introScene.id) ? null : introScene;
+  return snapshot;
 }
 
 export async function switchRpgRegion(
@@ -513,31 +572,47 @@ export async function switchRpgRegion(
     throw new Error('Mapa da região não encontrado.');
   }
 
-  // Garante que o nó inicial da região selecionada esteja marcado como concluído para liberar escolhas
+  const nowIso = new Date().toISOString();
+  const updates: PromiseLike<unknown>[] = [];
+
   if (targetMap.completedNodeIds.length === 0) {
-    await supabase
-      .from('rpg_region_maps')
-      .update({
-        completed_node_ids: [targetMap.graph.startNodeId],
-        status: targetMap.status === 'completed' ? 'completed' : 'active',
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', targetMap.id);
+    targetMap.completedNodeIds = [targetMap.graph.startNodeId];
+    targetMap.status = targetMap.status === 'completed' ? 'completed' : 'active';
+    updates.push(
+      supabase
+        .from('rpg_region_maps')
+        .update({
+          completed_node_ids: targetMap.completedNodeIds,
+          status: targetMap.status,
+          updated_at: nowIso,
+        })
+        .eq('id', targetMap.id)
+    );
   }
 
   const lastCompleted =
     targetMap.completedNodeIds[targetMap.completedNodeIds.length - 1] ?? targetMap.graph.startNodeId;
 
-  await supabase
-    .from('rpg_campaigns')
-    .update({
-      current_region_index: regionIndex,
-      current_node_id: lastCompleted,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', snapshot.campaign.id);
+  updates.push(
+    supabase
+      .from('rpg_campaigns')
+      .update({
+        current_region_index: regionIndex,
+        current_node_id: lastCompleted,
+        updated_at: nowIso,
+      })
+      .eq('id', snapshot.campaign.id)
+  );
 
-  return getOrCreateCampaignSnapshot(supabase, userId);
+  await Promise.all(updates);
+
+  snapshot.campaign.currentRegionIndex = regionIndex;
+  snapshot.campaign.currentNodeId = lastCompleted;
+  snapshot.currentMap = targetMap;
+  const nextRegion = getRegionByIndex(regionIndex);
+  const introScene = getRegionIntroDialogue(nextRegion.id);
+  snapshot.pendingDialogue = snapshot.campaign.seenDialogueIds.includes(introScene.id) ? null : introScene;
+  return snapshot;
 }
 
 export async function selectRpgMapNode(
@@ -548,6 +623,7 @@ export async function selectRpgMapNode(
   node: RpgMapNode;
   alreadyCompleted: boolean;
   question?: ReturnType<typeof toSafeClientQuestion>;
+  questionPool?: ReturnType<typeof toSafeClientQuestion>[];
   encounter?: RpgStageEncounterState;
   event?: ReturnType<typeof getEventById>;
   chestReward?: { itemId: string; itemName: string; gold: number; xp: number };
@@ -565,27 +641,30 @@ export async function selectRpgMapNode(
   const alreadyCompleted = currentMap.completedNodeIds.includes(node.id);
   const availableIds = getAvailableNodeIds(currentMap.graph, currentMap.completedNodeIds);
 
-  // Permite reabrir checkpoints já alcançados para gerenciar heróis/descansar
   if (!alreadyCompleted && !availableIds.includes(node.id)) {
     throw new Error('Este ponto do mapa ainda não está acessível. Avance por um caminho conectado.');
   }
 
-  await supabase
-    .from('rpg_campaigns')
-    .update({ current_node_id: node.id, updated_at: new Date().toISOString() })
-    .eq('id', campaign.id);
+  const nowIso = new Date().toISOString();
+  campaign.currentNodeId = node.id;
 
   if (node.type === 'question' || node.type === 'special') {
     const region = getRegionByIndex(campaign.currentRegionIndex);
 
-    // Verifica se já existe um combate de fase em andamento para este nó
-    const { data: existingRes } = await supabase
-      .from('rpg_node_resolutions')
-      .select('*')
-      .eq('campaign_id', campaign.id)
-      .eq('region_index', campaign.currentRegionIndex)
-      .eq('node_id', node.id)
-      .maybeSingle();
+    // Paraleliza atualização do nó atual + leitura da resolução existente
+    const [, { data: existingRes }] = await Promise.all([
+      supabase
+        .from('rpg_campaigns')
+        .update({ current_node_id: node.id, updated_at: nowIso })
+        .eq('id', campaign.id),
+      supabase
+        .from('rpg_node_resolutions')
+        .select('*')
+        .eq('campaign_id', campaign.id)
+        .eq('region_index', campaign.currentRegionIndex)
+        .eq('node_id', node.id)
+        .maybeSingle(),
+    ]);
 
     let encounter: RpgStageEncounterState | null = null;
     if (existingRes) {
@@ -634,39 +713,53 @@ export async function selectRpgMapNode(
       }
     }
 
-    const updatedSnap = await getOrCreateCampaignSnapshot(supabase, userId);
+    const question = toSafeClientQuestion(encounter.currentQuestionCodigo);
+    const questionPool = buildRegionQuestionPool(
+      campaign.currentRegionIndex,
+      encounter.usedQuestionCodes,
+      6
+    );
+
     return {
       node,
       alreadyCompleted,
-      question: toSafeClientQuestion(encounter.currentQuestionCodigo),
+      question,
+      questionPool,
       encounter,
-      snapshot: updatedSnap,
+      snapshot,
     };
   }
 
   if (node.type === 'event' || node.type === 'gap') {
+    await supabase
+      .from('rpg_campaigns')
+      .update({ current_node_id: node.id, updated_at: nowIso })
+      .eq('id', campaign.id);
     const event = getEventById(node.eventId ?? '');
-    const updatedSnap = await getOrCreateCampaignSnapshot(supabase, userId);
-    return { node, alreadyCompleted, event, snapshot: updatedSnap };
+    return { node, alreadyCompleted, event, snapshot };
   }
 
   if (node.type === 'chest') {
-    // Idempotente via rpg_node_resolutions
-    const { data: prevRes } = await supabase
-      .from('rpg_node_resolutions')
-      .select('rewards_json')
-      .eq('campaign_id', campaign.id)
-      .eq('region_index', campaign.currentRegionIndex)
-      .eq('node_id', node.id)
-      .maybeSingle();
+    const [, { data: prevRes }] = await Promise.all([
+      supabase
+        .from('rpg_campaigns')
+        .update({ current_node_id: node.id, updated_at: nowIso })
+        .eq('id', campaign.id),
+      supabase
+        .from('rpg_node_resolutions')
+        .select('rewards_json')
+        .eq('campaign_id', campaign.id)
+        .eq('region_index', campaign.currentRegionIndex)
+        .eq('node_id', node.id)
+        .maybeSingle(),
+    ]);
 
     if (prevRes) {
-      const updatedSnap = await getOrCreateCampaignSnapshot(supabase, userId);
       return {
         node,
         alreadyCompleted: true,
         chestReward: prevRes.rewards_json as { itemId: string; itemName: string; gold: number; xp: number },
-        snapshot: updatedSnap,
+        snapshot,
       };
     }
 
@@ -676,38 +769,44 @@ export async function selectRpgMapNode(
     const gold = 25 + campaign.currentRegionIndex * 15;
     const xp = scaleXpByRegion(RPG_BALANCE.xp.rewards.chestBase, campaign.currentRegionIndex);
 
-    await grantInventoryItem(supabase, userId, campaign.id, chosen.id, 1);
     const equipped = snapshot.heroes.filter((h) => h.isEquipped);
-    await awardXpToEquippedHeroes(supabase, equipped, xp);
-
     const chestReward = { itemId: chosen.id, itemName: chosen.name, gold, xp };
-    await supabase.from('rpg_node_resolutions').insert({
-      campaign_id: campaign.id,
-      user_id: userId,
-      region_index: campaign.currentRegionIndex,
-      node_id: node.id,
-      node_type: 'chest',
-      outcome_json: { opened: true },
-      xp_awarded: xp,
-      rewards_json: chestReward,
-    });
-
-    await supabase
-      .from('rpg_campaigns')
-      .update({ gold: campaign.gold + gold, updated_at: new Date().toISOString() })
-      .eq('id', campaign.id);
-
     const nextCompleted = Array.from(new Set([...currentMap.completedNodeIds, node.id]));
-    await supabase
-      .from('rpg_region_maps')
-      .update({ completed_node_ids: nextCompleted, updated_at: new Date().toISOString() })
-      .eq('id', currentMap.id);
 
+    await Promise.all([
+      grantInventoryItem(supabase, userId, campaign.id, chosen.id, 1),
+      awardXpToEquippedHeroes(supabase, equipped, xp),
+      supabase.from('rpg_node_resolutions').insert({
+        campaign_id: campaign.id,
+        user_id: userId,
+        region_index: campaign.currentRegionIndex,
+        node_id: node.id,
+        node_type: 'chest',
+        outcome_json: { opened: true },
+        xp_awarded: xp,
+        rewards_json: chestReward,
+      }),
+      supabase
+        .from('rpg_campaigns')
+        .update({ gold: campaign.gold + gold, updated_at: nowIso })
+        .eq('id', campaign.id),
+      supabase
+        .from('rpg_region_maps')
+        .update({ completed_node_ids: nextCompleted, updated_at: nowIso })
+        .eq('id', currentMap.id),
+    ]);
+
+    campaign.gold += gold;
+    currentMap.completedNodeIds = nextCompleted;
     const updatedSnap = await getOrCreateCampaignSnapshot(supabase, userId);
     return { node, alreadyCompleted: false, chestReward, snapshot: updatedSnap };
   }
 
   if (node.type === 'boss') {
+    await supabase
+      .from('rpg_campaigns')
+      .update({ current_node_id: node.id, updated_at: nowIso })
+      .eq('id', campaign.id);
     const bossDef = getBossByRegionIndex(campaign.currentRegionIndex);
     let activeBattle = snapshot.activeBossBattle;
     if (!activeBattle || activeBattle.regionIndex !== campaign.currentRegionIndex) {
@@ -724,27 +823,41 @@ export async function selectRpgMapNode(
         current_prompt_id: firstPrompt.id,
         used_prompt_ids: [firstPrompt.id],
       });
+      const updatedSnap = await getOrCreateCampaignSnapshot(supabase, userId);
+      return {
+        node,
+        alreadyCompleted,
+        bossBattle: updatedSnap.activeBossBattle ?? undefined,
+        snapshot: updatedSnap,
+      };
     }
-    const updatedSnap = await getOrCreateCampaignSnapshot(supabase, userId);
     return {
       node,
       alreadyCompleted,
-      bossBattle: updatedSnap.activeBossBattle ?? undefined,
-      snapshot: updatedSnap,
+      bossBattle: activeBattle,
+      snapshot,
     };
   }
 
   // Checkpoint ou Start
+  const updates: PromiseLike<unknown>[] = [
+    supabase
+      .from('rpg_campaigns')
+      .update({ current_node_id: node.id, updated_at: nowIso })
+      .eq('id', campaign.id),
+  ];
   if (node.type === 'checkpoint' && !alreadyCompleted) {
     const nextCompleted = Array.from(new Set([...currentMap.completedNodeIds, node.id]));
-    await supabase
-      .from('rpg_region_maps')
-      .update({ completed_node_ids: nextCompleted, updated_at: new Date().toISOString() })
-      .eq('id', currentMap.id);
+    currentMap.completedNodeIds = nextCompleted;
+    updates.push(
+      supabase
+        .from('rpg_region_maps')
+        .update({ completed_node_ids: nextCompleted, updated_at: nowIso })
+        .eq('id', currentMap.id)
+    );
   }
-
-  const updatedSnap = await getOrCreateCampaignSnapshot(supabase, userId);
-  return { node, alreadyCompleted, snapshot: updatedSnap };
+  await Promise.all(updates);
+  return { node, alreadyCompleted, snapshot };
 }
 
 export async function answerRpgChallengeNode(
@@ -753,7 +866,8 @@ export async function answerRpgChallengeNode(
   nodeId: string,
   selectedAnswers: string[],
   targetEnemyId?: string,
-  timedOut = false
+  timedOut = false,
+  preferredNextQuestionCodigo?: string
 ): Promise<{
   isCorrect: boolean;
   wasEnemyTurn: boolean;
@@ -917,14 +1031,17 @@ export async function answerRpgChallengeNode(
         parriedByHeroName = counter.parriedByHeroName;
       } else {
         hpPenalty = counter.damageTakenPerHero;
-        for (const hero of equipped) {
-          const nextHp = Math.max(0, hero.currentHp - hpPenalty);
-          hero.currentHp = nextHp;
-          await supabase
-            .from('rpg_heroes')
-            .update({ current_hp: nextHp, updated_at: new Date().toISOString() })
-            .eq('id', hero.id);
-        }
+        const nowIso = new Date().toISOString();
+        await Promise.all(
+          equipped.map((hero) => {
+            const nextHp = Math.max(0, hero.currentHp - hpPenalty);
+            hero.currentHp = nextHp;
+            return supabase
+              .from('rpg_heroes')
+              .update({ current_hp: nextHp, updated_at: nowIso })
+              .eq('id', hero.id);
+          })
+        );
       }
     }
   } else if (evalRes.isCorrect) {
@@ -960,21 +1077,26 @@ export async function answerRpgChallengeNode(
       parriedByHeroName = counter.parriedByHeroName;
     } else {
       hpPenalty = counter.damageTakenPerHero;
-      for (const hero of equipped) {
-        const nextHp = Math.max(0, hero.currentHp - hpPenalty);
-        hero.currentHp = nextHp;
-        await supabase
-          .from('rpg_heroes')
-          .update({ current_hp: nextHp, updated_at: new Date().toISOString() })
-          .eq('id', hero.id);
-      }
+      const nowIso = new Date().toISOString();
+      await Promise.all(
+        equipped.map((hero) => {
+          const nextHp = Math.max(0, hero.currentHp - hpPenalty);
+          hero.currentHp = nextHp;
+          return supabase
+            .from('rpg_heroes')
+            .update({ current_hp: nextHp, updated_at: nowIso })
+            .eq('id', hero.id);
+        })
+      );
     }
   }
 
   const allEnemiesDead = encounter.enemies.every((e) => e.currentHp <= 0);
   const allHeroesDead = equipped.every((h) => h.currentHp <= 0);
+  const nowIso = new Date().toISOString();
 
   let nextQuestion: ReturnType<typeof toSafeClientQuestion> | null = null;
+  const finalWrites: PromiseLike<unknown>[] = [];
 
   if (allEnemiesDead) {
     encounter.status = 'victory';
@@ -989,17 +1111,26 @@ export async function answerRpgChallengeNode(
     xpAwarded = scaleXpByRegion(baseXp, campaign.currentRegionIndex);
     goldAwarded = isSpecial ? 30 : 15;
 
-    await awardXpToEquippedHeroes(supabase, equipped, xpAwarded);
-    await supabase
-      .from('rpg_campaigns')
-      .update({ gold: campaign.gold + goldAwarded, updated_at: new Date().toISOString() })
-      .eq('id', campaign.id);
-
     const nextCompleted = Array.from(new Set([...currentMap.completedNodeIds, node.id]));
-    await supabase
-      .from('rpg_region_maps')
-      .update({ completed_node_ids: nextCompleted, updated_at: new Date().toISOString() })
-      .eq('id', currentMap.id);
+    campaign.gold += goldAwarded;
+    currentMap.completedNodeIds = nextCompleted;
+    snapshot.stats.totalNodesCompleted = snapshot.regionMaps.reduce(
+      (acc, m) => acc + m.completedNodeIds.length,
+      0
+    );
+    snapshot.stats.totalXpEarned += xpAwarded;
+
+    finalWrites.push(
+      awardXpToEquippedHeroes(supabase, equipped, xpAwarded),
+      supabase
+        .from('rpg_campaigns')
+        .update({ gold: campaign.gold, updated_at: nowIso })
+        .eq('id', campaign.id),
+      supabase
+        .from('rpg_region_maps')
+        .update({ completed_node_ids: nextCompleted, updated_at: nowIso })
+        .eq('id', currentMap.id)
+    );
   } else if (allHeroesDead) {
     encounter.status = 'defeat';
     encounter.phase = 'hero_turn';
@@ -1007,34 +1138,42 @@ export async function answerRpgChallengeNode(
     encounter.turnTimeLimitSec = null;
     encounter.turnStartedAt = null;
 
-    for (const hero of equipped) {
-      const recovered = Math.max(10, Math.round(hero.maxHp * RPG_BALANCE.combat.defeatRecoveryHpRatio));
-      await supabase
-        .from('rpg_heroes')
-        .update({ current_hp: recovered, updated_at: new Date().toISOString() })
-        .eq('id', hero.id);
-    }
     const lastCheckpoint = [...currentMap.graph.nodes]
       .reverse()
       .find((n) => n.type === 'checkpoint' && currentMap.completedNodeIds.includes(n.id));
-    await supabase
-      .from('rpg_campaigns')
-      .update({
-        current_node_id: lastCheckpoint?.id ?? currentMap.graph.startNodeId,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', campaign.id);
+    const fallbackNodeId = lastCheckpoint?.id ?? currentMap.graph.startNodeId;
+    campaign.currentNodeId = fallbackNodeId;
+
+    for (const hero of equipped) {
+      const recovered = Math.max(10, Math.round(hero.maxHp * RPG_BALANCE.combat.defeatRecoveryHpRatio));
+      hero.currentHp = recovered;
+      finalWrites.push(
+        supabase
+          .from('rpg_heroes')
+          .update({ current_hp: recovered, updated_at: nowIso })
+          .eq('id', hero.id)
+      );
+    }
+    finalWrites.push(
+      supabase
+        .from('rpg_campaigns')
+        .update({ current_node_id: fallbackNodeId, updated_at: nowIso })
+        .eq('id', campaign.id)
+    );
   } else {
     encounter.turnNumber += 1;
-    const nextCode = pickNextStageQuestionCode(
-      campaign.currentRegionIndex,
-      encounter.usedQuestionCodes
-    );
+    const validPreferred =
+      preferredNextQuestionCodigo &&
+      allQuestions.some((q) => q.codigo === preferredNextQuestionCodigo)
+        ? preferredNextQuestionCodigo
+        : null;
+    const nextCode =
+      validPreferred ??
+      pickNextStageQuestionCode(campaign.currentRegionIndex, encounter.usedQuestionCodes);
     encounter.currentQuestionCodigo = nextCode;
     encounter.usedQuestionCodes.push(nextCode);
     nextQuestion = toSafeClientQuestion(nextCode);
 
-    // Alterna para TURNO DE ATAQUE DO INIMIGO após o herói agir!
     const alive = encounter.enemies.filter((e) => e.currentHp > 0);
     if (!wasEnemyTurn && alive.length > 0) {
       const attacker = alive[(encounter.turnNumber - 1) % alive.length];
@@ -1045,7 +1184,7 @@ export async function answerRpgChallengeNode(
         isSpecial,
         node.level
       );
-      encounter.turnStartedAt = new Date().toISOString();
+      encounter.turnStartedAt = nowIso;
     } else {
       encounter.phase = 'hero_turn';
       encounter.attackingEnemyId = null;
@@ -1055,30 +1194,34 @@ export async function answerRpgChallengeNode(
   }
 
   if (existing) {
-    await supabase
-      .from('rpg_node_resolutions')
-      .update({
+    finalWrites.push(
+      supabase
+        .from('rpg_node_resolutions')
+        .update({
+          question_codigo: encounter.currentQuestionCodigo,
+          outcome_json: { isCorrect: encounter.status === 'victory', encounter },
+          xp_awarded: xpAwarded,
+          rewards_json: { gold: goldAwarded, chestClaimed: false },
+        })
+        .eq('id', existing.id)
+    );
+  } else {
+    finalWrites.push(
+      supabase.from('rpg_node_resolutions').insert({
+        campaign_id: campaign.id,
+        user_id: userId,
+        region_index: campaign.currentRegionIndex,
+        node_id: node.id,
+        node_type: node.type,
         question_codigo: encounter.currentQuestionCodigo,
         outcome_json: { isCorrect: encounter.status === 'victory', encounter },
         xp_awarded: xpAwarded,
         rewards_json: { gold: goldAwarded, chestClaimed: false },
       })
-      .eq('id', existing.id);
-  } else {
-    await supabase.from('rpg_node_resolutions').insert({
-      campaign_id: campaign.id,
-      user_id: userId,
-      region_index: campaign.currentRegionIndex,
-      node_id: node.id,
-      node_type: node.type,
-      question_codigo: encounter.currentQuestionCodigo,
-      outcome_json: { isCorrect: encounter.status === 'victory', encounter },
-      xp_awarded: xpAwarded,
-      rewards_json: { gold: goldAwarded, chestClaimed: false },
-    });
+    );
   }
 
-  const updatedSnap = await getOrCreateCampaignSnapshot(supabase, userId);
+  await Promise.all(finalWrites);
 
   return {
     isCorrect: evalRes.isCorrect,
@@ -1100,7 +1243,7 @@ export async function answerRpgChallengeNode(
     nextQuestion,
     rewardChestAvailable: encounter.status === 'victory',
     rewardChestStyle: isSpecial ? 'gold' : 'wood',
-    snapshot: updatedSnap,
+    snapshot,
   };
 }
 

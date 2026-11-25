@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import {
   ArrowRight,
   CheckCircle2,
@@ -26,11 +26,19 @@ import {
   type RpgVfxType,
   type SpriteAnimState,
 } from '@/components/rpg/RpgArtwork';
+import { evaluateAnswer } from '@/lib/evaluation';
 import { playRpgSfx } from '@/lib/rpg/audio';
-import { playSound } from '@/lib/sounds';
+import { RPG_BALANCE, scaleXpByRegion } from '@/lib/rpg/balance';
 import { getItemDefinition } from '@/lib/rpg/data/items';
+import {
+  calculateBossCounterAttack,
+  calculateBossDamage,
+  computeEffectivePartyStats,
+} from '@/lib/rpg/engine/combat';
+import { playSound } from '@/lib/sounds';
 import { cn } from '@/lib/utils';
 import type {
+  RpgActiveTempEffect,
   RpgCampaignSnapshot,
   RpgHeroState,
   RpgInventoryEntry,
@@ -47,13 +55,79 @@ export interface SafeClientQuestion {
   quantidade_respostas: string;
   alternativas: Record<string, string>;
   managedImageUrl: string | null;
+  correctAnswers?: string[];
+  explanation?: string;
 }
 
 export interface ActiveQuestionPayload {
   node: RpgMapNode;
   question: SafeClientQuestion;
+  questionPool?: SafeClientQuestion[];
   encounter: RpgStageEncounterState;
 }
+
+/**
+ * Cronômetro isolado para o ENEMY TURN: evita re-renderizar o modal inteiro
+ * (sprites e botões de alternativa) a cada 150ms.
+ */
+const EnemyTurnTimer = memo(function EnemyTurnTimer({
+  timeLimitSec,
+  turnKey,
+  onTimeout,
+}: {
+  timeLimitSec: number;
+  turnKey: number;
+  onTimeout: () => void;
+}) {
+  const [secondsLeft, setSecondsLeft] = useState<number>(timeLimitSec);
+  const timeoutFiredRef = useRef(false);
+  const lastTickSecRef = useRef<number>(-1);
+  const onTimeoutRef = useRef(onTimeout);
+  onTimeoutRef.current = onTimeout;
+
+  useEffect(() => {
+    const startMs = Date.now();
+    setSecondsLeft(timeLimitSec);
+    timeoutFiredRef.current = false;
+    lastTickSecRef.current = -1;
+
+    const interval = window.setInterval(() => {
+      const elapsed = (Date.now() - startMs) / 1000;
+      const rem = Math.max(0, timeLimitSec - elapsed);
+      setSecondsLeft(rem);
+
+      const ceilSec = Math.ceil(rem);
+      if (ceilSec > 0 && ceilSec <= 5 && ceilSec !== lastTickSecRef.current) {
+        lastTickSecRef.current = ceilSec;
+        playSound('tick');
+      }
+
+      if (rem <= 0 && !timeoutFiredRef.current) {
+        timeoutFiredRef.current = true;
+        window.clearInterval(interval);
+        onTimeoutRef.current();
+      }
+    }, 150);
+
+    return () => window.clearInterval(interval);
+  }, [timeLimitSec, turnKey]);
+
+  return (
+    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-[#1c1016] border border-rose-500/80 text-xs font-black text-rose-200">
+      <Clock className="w-3.5 h-3.5 text-rose-400" />
+      <span>{Math.ceil(secondsLeft)}s</span>
+      <div className="w-24 h-2 rounded-full bg-black/80 overflow-hidden">
+        <div
+          className={cn(
+            'h-full transition-all duration-150',
+            secondsLeft <= 5 ? 'bg-rose-500' : 'bg-amber-400'
+          )}
+          style={{ width: `${Math.max(0, (secondsLeft / timeLimitSec) * 100)}%` }}
+        />
+      </div>
+    </div>
+  );
+});
 
 /**
  * Arena de Combate Proporcional estilo Indie Pixel-Art RPG:
@@ -65,9 +139,11 @@ export function RpgChallengeModal({
   payload,
   region,
   equippedHeroes,
+  activeEffects = [],
   hintsRemaining,
   gold,
   inventory,
+  initialSyncPromise,
   onSnapshotUpdate,
   onOpenRewardChest,
   onClose,
@@ -75,9 +151,11 @@ export function RpgChallengeModal({
   payload: ActiveQuestionPayload;
   region: RpgRegionConfig;
   equippedHeroes: RpgHeroState[];
+  activeEffects?: RpgActiveTempEffect[];
   hintsRemaining: number;
   gold: number;
   inventory: RpgInventoryEntry[];
+  initialSyncPromise?: Promise<unknown>;
   onSnapshotUpdate: (snapshot: RpgCampaignSnapshot) => void;
   onOpenRewardChest: (nodeId: string, style: 'wood' | 'gold') => void;
   onClose: () => void;
@@ -85,6 +163,15 @@ export function RpgChallengeModal({
   const { node } = payload;
   const [encounter, setEncounter] = useState<RpgStageEncounterState>(payload.encounter);
   const [question, setQuestion] = useState<SafeClientQuestion>(payload.question);
+  const [localHeroes, setLocalHeroes] = useState<RpgHeroState[]>(equippedHeroes);
+  const questionPoolRef = useRef<SafeClientQuestion[]>(payload.questionPool ?? []);
+  const syncQueueRef = useRef<Promise<unknown>>(initialSyncPromise ?? Promise.resolve());
+  const [waitingChestSync, setWaitingChestSync] = useState(false);
+
+  useEffect(() => {
+    setLocalHeroes(equippedHeroes);
+  }, [equippedHeroes]);
+
   const [targetEnemyId, setTargetEnemyId] = useState<string>(
     payload.encounter.enemies.find((e) => e.currentHp > 0)?.id ?? payload.encounter.enemies[0]?.id ?? 'e1'
   );
@@ -130,42 +217,6 @@ export function RpgChallengeModal({
 
   const isEnemyTurn = encounter.phase === 'enemy_turn';
   const timeLimitSec = encounter.turnTimeLimitSec ?? 20;
-  const [secondsLeft, setSecondsLeft] = useState<number>(timeLimitSec);
-  const timeoutFiredRef = useRef(false);
-  const lastTickSecRef = useRef<number>(-1);
-
-  useEffect(() => {
-    if (!isEnemyTurn || turnResult) {
-      timeoutFiredRef.current = false;
-      lastTickSecRef.current = -1;
-      return;
-    }
-    const startMs = Date.now();
-    const limit = encounter.turnTimeLimitSec ?? 20;
-    setSecondsLeft(limit);
-    timeoutFiredRef.current = false;
-
-    const interval = window.setInterval(() => {
-      const elapsed = (Date.now() - startMs) / 1000;
-      const rem = Math.max(0, limit - elapsed);
-      setSecondsLeft(rem);
-
-      const ceilSec = Math.ceil(rem);
-      if (ceilSec > 0 && ceilSec <= 5 && ceilSec !== lastTickSecRef.current) {
-        lastTickSecRef.current = ceilSec;
-        playSound('tick');
-      }
-
-      if (rem <= 0 && !timeoutFiredRef.current) {
-        timeoutFiredRef.current = true;
-        window.clearInterval(interval);
-        void submitAnswer(true);
-      }
-    }, 150);
-
-    return () => window.clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isEnemyTurn, encounter.turnNumber, turnResult]);
 
   const elimItems = inventory.filter((entry) => {
     const def = getItemDefinition(entry.itemId);
@@ -177,8 +228,8 @@ export function RpgChallengeModal({
     encounter.enemies.find((e) => e.currentHp > 0)?.id ??
     '';
 
-  const partyHp = equippedHeroes.reduce((a, h) => a + h.currentHp, 0);
-  const partyMaxHp = Math.max(1, equippedHeroes.reduce((a, h) => a + h.maxHp, 0));
+  const partyHp = localHeroes.reduce((a, h) => a + h.currentHp, 0);
+  const partyMaxHp = Math.max(1, localHeroes.reduce((a, h) => a + h.maxHp, 0));
   const partyHpPct = Math.round((partyHp / partyMaxHp) * 100);
 
   const toggleOption = (letter: string) => {
@@ -241,9 +292,257 @@ export function RpgChallengeModal({
     }
   };
 
+  const playTurnFx = (data: {
+    attackBlocked: boolean;
+    isCorrect: boolean;
+    isCritical: boolean;
+    damageDealt: number;
+    parriedByHeroName: string | null;
+    timedOut: boolean;
+    hpPenalty: number;
+    encounterStatus: 'in_progress' | 'victory' | 'defeat';
+  }) => {
+    const key = Date.now();
+    if (data.attackBlocked) {
+      setHeroAnim('parry');
+      setVfx({ target: 'hero', type: 'parry', key });
+      setDmgPopup({ key, text: 'ATAQUE BLOQUEADO!', tone: 'parry' });
+      playRpgSfx('parry_clang');
+    } else if (data.isCorrect) {
+      setHeroAnim('attack');
+      setHitEnemyId(activeTargetId);
+      setVfx({ target: 'enemy', type: data.isCritical ? 'crit' : 'slash', key });
+      setDmgPopup({
+        key,
+        text: data.isCritical ? `-${data.damageDealt} CRÍTICO!` : `-${data.damageDealt}`,
+        tone: data.isCritical ? 'crit' : 'hit',
+      });
+      if (data.isCritical) {
+        setScreenShake(true);
+        playRpgSfx('crit_boom');
+      } else {
+        playRpgSfx('sword_hit');
+      }
+      if (data.encounterStatus === 'victory') {
+        window.setTimeout(() => playRpgSfx('victory_fanfare'), 380);
+      }
+    } else if (data.parriedByHeroName) {
+      setHeroAnim('parry');
+      setVfx({ target: 'hero', type: 'parry', key });
+      setDmgPopup({ key, text: `PARRY! (${data.parriedByHeroName})`, tone: 'parry' });
+      playRpgSfx('parry_clang');
+    } else {
+      setHeroAnim('hit');
+      setScreenShake(true);
+      setVfx({ target: 'hero', type: 'dark', key });
+      setDmgPopup({
+        key,
+        text: data.timedOut ? `TEMPO ESGOTADO! -${data.hpPenalty} HP` : `-${data.hpPenalty} HP`,
+        tone: 'bad',
+      });
+      playRpgSfx(data.encounterStatus === 'defeat' ? 'defeat_chord' : 'boss_hit');
+    }
+
+    window.setTimeout(() => {
+      setScreenShake(false);
+      setHitEnemyId(null);
+      setHeroAnim(
+        data.encounterStatus === 'victory'
+          ? 'victory'
+          : data.encounterStatus === 'defeat'
+            ? 'defeat'
+            : 'idle'
+      );
+    }, 650);
+  };
+
   const submitAnswer = async (timedOut = false) => {
     if (!timedOut && selected.length === 0) return;
-    if (submitting) return;
+    if (submitting || turnResult) return;
+
+    const chosenAnswers = timedOut ? [] : [...selected];
+    const targetId = activeTargetId || undefined;
+
+    // CAMINHO ULTRA-RÁPIDO LOCAL-FIRST (< 10ms): avalia no cliente e sincroniza no Supabase em background!
+    if (question.correctAnswers && question.explanation) {
+      const nextEncounter: RpgStageEncounterState = {
+        ...encounter,
+        enemies: encounter.enemies.map((e) => ({ ...e })),
+        usedQuestionCodes: [...encounter.usedQuestionCodes],
+      };
+      const nextHeroes = localHeroes.map((h) => ({ ...h }));
+      const wasEnemyTurn = nextEncounter.phase === 'enemy_turn';
+      const isSpecial = node.type === 'special';
+      const evalRes = timedOut
+        ? { isCorrect: false, normalizedSelected: [] as string[], normalizedCorrect: question.correctAnswers }
+        : evaluateAnswer(chosenAnswers, question.correctAnswers);
+      const partyStats = computeEffectivePartyStats(nextHeroes, activeEffects);
+
+      let damageDealt = 0;
+      let isCritical = false;
+      let targetEnemyName: string | null = null;
+      let parriedByHeroName: string | null = null;
+      let attackBlocked = false;
+      let hpPenalty = 0;
+      let xpAwarded = 0;
+      let goldAwarded = 0;
+
+      if (wasEnemyTurn) {
+        const attacker =
+          nextEncounter.enemies.find((e) => e.id === nextEncounter.attackingEnemyId && e.currentHp > 0) ??
+          nextEncounter.enemies.find((e) => e.currentHp > 0);
+        targetEnemyName = attacker?.name ?? null;
+        if (evalRes.isCorrect && !timedOut) {
+          attackBlocked = true;
+        } else {
+          const rawAtk = attacker?.attackDamage ?? 30;
+          const counter = timedOut
+            ? { parried: false, parriedByHeroName: null, damageTakenPerHero: Math.max(12, rawAtk - partyStats.totalDefense) }
+            : calculateBossCounterAttack({
+                bossAttackDamage: rawAtk,
+                equippedHeroes: nextHeroes,
+                activeEffects,
+              });
+          if (counter.parried) {
+            parriedByHeroName = counter.parriedByHeroName;
+          } else {
+            hpPenalty = counter.damageTakenPerHero;
+            for (const h of nextHeroes) h.currentHp = Math.max(0, h.currentHp - hpPenalty);
+          }
+        }
+      } else if (evalRes.isCorrect) {
+        const target =
+          nextEncounter.enemies.find((e) => e.id === targetId && e.currentHp > 0) ??
+          nextEncounter.enemies.find((e) => e.currentHp > 0);
+        if (target) {
+          const hit = calculateBossDamage({ score: 1, classification: 'correct', partyStats });
+          damageDealt = hit.damage;
+          isCritical = hit.isCritical;
+          targetEnemyName = target.name;
+          target.currentHp = Math.max(0, target.currentHp - damageDealt);
+        }
+      } else {
+        const aliveEnemies = nextEncounter.enemies.filter((e) => e.currentHp > 0);
+        const avgAtk = Math.round(
+          aliveEnemies.reduce((acc, e) => acc + e.attackDamage, 0) / Math.max(1, aliveEnemies.length)
+        );
+        const counter = calculateBossCounterAttack({
+          bossAttackDamage: avgAtk,
+          equippedHeroes: nextHeroes,
+          activeEffects,
+        });
+        if (counter.parried) {
+          parriedByHeroName = counter.parriedByHeroName;
+        } else {
+          hpPenalty = counter.damageTakenPerHero;
+          for (const h of nextHeroes) h.currentHp = Math.max(0, h.currentHp - hpPenalty);
+        }
+      }
+
+      const allEnemiesDead = nextEncounter.enemies.every((e) => e.currentHp <= 0);
+      const allHeroesDead = nextHeroes.every((h) => h.currentHp <= 0);
+      let nextQ: SafeClientQuestion | null = null;
+
+      if (allEnemiesDead) {
+        nextEncounter.status = 'victory';
+        nextEncounter.phase = 'hero_turn';
+        nextEncounter.attackingEnemyId = null;
+        nextEncounter.turnTimeLimitSec = null;
+        xpAwarded = scaleXpByRegion(
+          isSpecial ? RPG_BALANCE.xp.rewards.specialCorrect : RPG_BALANCE.xp.rewards.questionCorrect,
+          region.index
+        );
+        goldAwarded = isSpecial ? 30 : 15;
+      } else if (allHeroesDead) {
+        nextEncounter.status = 'defeat';
+        nextEncounter.phase = 'hero_turn';
+        nextEncounter.attackingEnemyId = null;
+        nextEncounter.turnTimeLimitSec = null;
+      } else {
+        nextEncounter.turnNumber += 1;
+        const usedSet = new Set(nextEncounter.usedQuestionCodes);
+        const candidate =
+          questionPoolRef.current.find((q) => !usedSet.has(q.codigo)) ??
+          questionPoolRef.current[0] ??
+          null;
+        if (candidate) {
+          nextQ = candidate;
+          nextEncounter.currentQuestionCodigo = candidate.codigo;
+          nextEncounter.usedQuestionCodes.push(candidate.codigo);
+        }
+        const alive = nextEncounter.enemies.filter((e) => e.currentHp > 0);
+        if (!wasEnemyTurn && alive.length > 0) {
+          const attacker = alive[(nextEncounter.turnNumber - 1) % alive.length];
+          nextEncounter.phase = 'enemy_turn';
+          nextEncounter.attackingEnemyId = attacker.id;
+          const baseLim = isSpecial ? 18 : 22;
+          nextEncounter.turnTimeLimitSec = Math.max(
+            12,
+            baseLim - region.index * 2 - (node.level >= 7 ? 2 : 0)
+          );
+          nextEncounter.turnStartedAt = new Date().toISOString();
+        } else {
+          nextEncounter.phase = 'hero_turn';
+          nextEncounter.attackingEnemyId = null;
+          nextEncounter.turnTimeLimitSec = null;
+          nextEncounter.turnStartedAt = null;
+        }
+      }
+
+      const localResult = {
+        isCorrect: evalRes.isCorrect,
+        wasEnemyTurn,
+        attackBlocked,
+        timedOut,
+        correctAnswers: evalRes.normalizedCorrect,
+        explanation: question.explanation,
+        damageDealt,
+        isCritical,
+        targetEnemyName,
+        parriedByHeroName,
+        xpAwarded,
+        hpPenalty,
+        goldAwarded,
+        encounterStatus: nextEncounter.status,
+        nextQuestion: nextQ,
+        rewardChestAvailable: nextEncounter.status === 'victory',
+        rewardChestStyle: (isSpecial ? 'gold' : 'wood') as 'wood' | 'gold',
+      };
+
+      setLocalHeroes(nextHeroes);
+      setEncounter(nextEncounter);
+      setTurnResult(localResult);
+      playTurnFx(localResult);
+
+      // Sincroniza no Supabase em fila ordenada em background (0ms de espera na UI!)
+      syncQueueRef.current = syncQueueRef.current
+        .then(async () => {
+          const res = await fetch('/api/rpg/challenge/answer', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              nodeId: node.id,
+              selectedAnswers: chosenAnswers,
+              targetEnemyId: targetId,
+              timedOut,
+              nextQuestionCodigo: nextQ?.codigo,
+            }),
+          });
+          if (res.ok) {
+            const serverData = await res.json();
+            if (serverData.snapshot) onSnapshotUpdate(serverData.snapshot);
+            if (!nextQ && serverData.nextQuestion) {
+              setTurnResult((prev) => (prev ? { ...prev, nextQuestion: serverData.nextQuestion } : prev));
+            }
+          }
+        })
+        .catch(() => {
+          /* silencioso no background; próximo snapshot reconcilia */
+        });
+      return;
+    }
+
+    // Fallback de rede caso a questão não tenha vindo com gabarito local
     setSubmitting(true);
     setError(null);
     try {
@@ -252,8 +551,8 @@ export function RpgChallengeModal({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           nodeId: node.id,
-          selectedAnswers: timedOut ? [] : selected,
-          targetEnemyId: activeTargetId || undefined,
+          selectedAnswers: chosenAnswers,
+          targetEnemyId: targetId,
           timedOut,
         }),
       });
@@ -263,59 +562,7 @@ export function RpgChallengeModal({
       setEncounter(data.encounter);
       setTurnResult(data);
       onSnapshotUpdate(data.snapshot);
-
-      const key = Date.now();
-      if (data.attackBlocked) {
-        setHeroAnim('parry');
-        setVfx({ target: 'hero', type: 'parry', key });
-        setDmgPopup({ key, text: 'ATAQUE BLOQUEADO!', tone: 'parry' });
-        playRpgSfx('parry_clang');
-      } else if (data.isCorrect) {
-        setHeroAnim('attack');
-        setHitEnemyId(activeTargetId);
-        setVfx({ target: 'enemy', type: data.isCritical ? 'crit' : 'slash', key });
-        setDmgPopup({
-          key,
-          text: data.isCritical ? `-${data.damageDealt} CRÍTICO!` : `-${data.damageDealt}`,
-          tone: data.isCritical ? 'crit' : 'hit',
-        });
-        if (data.isCritical) {
-          setScreenShake(true);
-          playRpgSfx('crit_boom');
-        } else {
-          playRpgSfx('sword_hit');
-        }
-        if (data.encounterStatus === 'victory') {
-          window.setTimeout(() => playRpgSfx('victory_fanfare'), 380);
-        }
-      } else if (data.parriedByHeroName) {
-        setHeroAnim('parry');
-        setVfx({ target: 'hero', type: 'parry', key });
-        setDmgPopup({ key, text: `PARRY! (${data.parriedByHeroName})`, tone: 'parry' });
-        playRpgSfx('parry_clang');
-      } else {
-        setHeroAnim('hit');
-        setScreenShake(true);
-        setVfx({ target: 'hero', type: 'dark', key });
-        setDmgPopup({
-          key,
-          text: data.timedOut ? `TEMPO ESGOTADO! -${data.hpPenalty} HP` : `-${data.hpPenalty} HP`,
-          tone: 'bad',
-        });
-        playRpgSfx(data.encounterStatus === 'defeat' ? 'defeat_chord' : 'boss_hit');
-      }
-
-      window.setTimeout(() => {
-        setScreenShake(false);
-        setHitEnemyId(null);
-        setHeroAnim(
-          data.encounterStatus === 'victory'
-            ? 'victory'
-            : data.encounterStatus === 'defeat'
-              ? 'defeat'
-              : 'idle'
-        );
-      }, 650);
+      playTurnFx(data);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Erro ao corrigir questão.');
     } finally {
@@ -431,7 +678,7 @@ export function RpgChallengeModal({
           {/* Heróis à Esquerda */}
           <div className="relative z-10 flex items-end gap-1.5 sm:gap-7">
             {vfx?.target === 'hero' && <VfxBurst type={vfx.type} triggerKey={vfx.key} size={110} />}
-            {equippedHeroes.map((hero) => {
+            {localHeroes.map((hero) => {
               const hpPct = Math.max(0, Math.round((hero.currentHp / hero.maxHp) * 100));
               return (
                 <div key={hero.id} className="flex flex-col items-center">
@@ -552,19 +799,11 @@ export function RpgChallengeModal({
               </div>
 
               {isEnemyTurn && !turnResult && (
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-[#1c1016] border border-rose-500/80 text-xs font-black text-rose-200">
-                  <Clock className="w-3.5 h-3.5 text-rose-400" />
-                  <span>{Math.ceil(secondsLeft)}s</span>
-                  <div className="w-24 h-2 rounded-full bg-black/80 overflow-hidden">
-                    <div
-                      className={cn(
-                        'h-full transition-all duration-150',
-                        secondsLeft <= 5 ? 'bg-rose-500' : 'bg-amber-400'
-                      )}
-                      style={{ width: `${Math.max(0, (secondsLeft / timeLimitSec) * 100)}%` }}
-                    />
-                  </div>
-                </div>
+                <EnemyTurnTimer
+                  timeLimitSec={timeLimitSec}
+                  turnKey={encounter.turnNumber}
+                  onTimeout={() => void submitAnswer(true)}
+                />
               )}
             </div>
 
@@ -765,13 +1004,20 @@ export function RpgChallengeModal({
             ) : turnResult.encounterStatus === 'victory' && turnResult.rewardChestAvailable ? (
               <button
                 type="button"
-                onClick={() => {
+                disabled={waitingChestSync}
+                onClick={async () => {
                   playRpgSfx('click');
+                  setWaitingChestSync(true);
+                  try {
+                    await syncQueueRef.current;
+                  } finally {
+                    setWaitingChestSync(false);
+                  }
                   onOpenRewardChest(node.id, turnResult.rewardChestStyle);
                 }}
-                className="w-full sm:w-auto rpg-btn-gold inline-flex items-center justify-center gap-2 px-8 py-3 sm:py-2.5 rounded-xl text-sm font-extrabold uppercase tracking-wider animate-pulse"
+                className="w-full sm:w-auto rpg-btn-gold inline-flex items-center justify-center gap-2 px-8 py-3 sm:py-2.5 rounded-xl text-sm font-extrabold uppercase tracking-wider animate-pulse disabled:opacity-70"
               >
-                <Gift className="w-4 h-4" />
+                {waitingChestSync ? <Loader2 className="w-4 h-4 animate-spin" /> : <Gift className="w-4 h-4" />}
                 Escolher Baú de Prêmio!
               </button>
             ) : (

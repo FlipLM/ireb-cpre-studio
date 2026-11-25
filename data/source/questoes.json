@@ -957,8 +957,8 @@
       "C": "Definir os requisitos que devem ser priorizados.",
       "D": "Selecione a técnica de priorização."
     },
-    "resposta_correta": "C",
-    "explicacao": "De acordo com o Syllabus IREB CPRE-FL (Seção 8.4), o processo de priorização segue uma sequência lógica de etapas: 1. Definir os objetivos e restrições da priorização; 2. Selecionar os requisitos a serem priorizados; 3. Selecionar os stakeholders envolvidos; 4. Definir os critérios; 5. Selecionar a técnica de priorização. Entre as opções fornecidas, a definição dos requisitos (etapa 2) é a que ocorre primeiro cronologicamente.",
+    "resposta_correta": "B",
+    "explicacao": "Segundo o Handbook do IREB CPRE-FL, a sequência de preparação para priorização é: (1) definir metas e restrições → (2) definir os critérios de avaliação desejados (B) → (3) definir os stakeholders envolvidos (A) → (4) selecionar os requisitos a serem priorizados (C) → (5) escolher a técnica de priorização (D). Portanto, entre as opções, B ocorre primeiro.",
     "imagem": null,
     "print": "C:/Users/filip/Pictures/Screenshots/Simulado 2/Captura de tela 2026-11-23 172211.png"
   },
@@ -1073,7 +1073,7 @@
     "codigo": "ID-080",
     "enunciado": "Vários fatores influenciam a forma como o processo de ER deve ser configurado. Em relação a este tópico, quais das seguintes frases são INCORRETAS?",
     "tipo": "multipla",
-    "quantidade_respostas": "3",
+    "quantidade_respostas": "2",
     "alternativas": {
       "A": "Quando o tempo disponível e os orçamentos são limitados, os recursos disponíveis para ER devem ser utilizados de forma eficiente, muitas vezes levando à adoção de um processo de ER simplificado e leve.",
       "B": "Quanto menos experientes forem os Engenheiros de Requisitos, menos sofisticado deverá ser o processo de RE.",
@@ -1082,11 +1082,10 @@
       "E": "Quando existe um alto grau de confiança entre o cliente e o fornecedor, as especificações utilizadas devem ser mais formais."
     },
     "resposta_correta": [
-      "B",
       "D",
       "E"
     ],
-    "explicacao": "De acordo com o Syllabus IREB CPRE-FL sobre a configuração do processo de ER: (B) Equipes menos experientes geralmente exigem processos mais estruturados e orientados para garantir a qualidade, e não processos menos sofisticados. (D) Um alto nível de entendimento compartilhado permite que o processo seja menos formal e rigoroso, pois há menos necessidade de documentação exaustiva para alinhar as partes. (E) Um alto grau de confiança entre cliente e fornecedor permite reduzir a formalidade das especificações, pois a necessidade de documentação com fins puramente contratuais ou defensivos diminui. As alternativas A e C descrevem corretamente fatores de influência (restrições de recursos levam a processos leves; alta complexidade exige maior rigor).",
+    "explicacao": "No IREB CPRE-FL, quanto menos experientes forem os engenheiros de requisitos, mais simples e menos sofisticado deve ser o processo de ER (portanto B é verdadeira). As afirmações incorretas são D (maior entendimento compartilhado permite processo mais leve, e não mais rigoroso) e E (maior confiança permite especificações menos formais).",
     "imagem": null,
     "print": "C:/Users/filip/Pictures/Screenshots/Simulado 2/Captura de tela 2026-11-23 172249.png"
   },
@@ -1176,9 +1175,9 @@
     },
     "resposta_correta": [
       "A",
-      "D"
+      "E"
     ],
-    "explicacao": "De acordo com o Syllabus IREB CPRE-FL (Capítulo 6), as técnicas de validação de requisitos são classificadas em três categorias principais: Técnicas de Revisão (Review techniques), Técnicas Exploratórias (Exploratory techniques, como o uso de protótipos) e Técnicas de Avaliação (Evaluation techniques, como o uso de checklists ou leitura baseada em perspectiva).",
+    "explicacao": "O IREB CPRE-FL v3.x classifica as técnicas de validação em três categorias oficiais: técnicas de revisão (estáticas), técnicas exploratórias (dinâmicas — A) e técnicas de desenvolvimento de amostra / sample development (estáticas — E). \"Técnicas de avaliação\" (D) não é uma categoria oficial do IREB.",
     "imagem": null,
     "print": "C:/Users/filip/Pictures/Screenshots/Simulado 2/Captura de tela 2026-11-23 172317.png"
   },
@@ -1231,8 +1230,8 @@
       "C": "Ferramentas de \"Colaboração na ER\" são usadas para compartilhar requisitos.",
       "D": "Todas as outras opções estão erradas."
     },
-    "resposta_correta": "B",
-    "explicacao": "De acordo com o Syllabus do IREB CPRE-FL, existem várias categorias de ferramentas para apoiar a Engenharia de Requisitos. Ferramentas de gestão de requisitos (Requirements Management Tools) suportam tarefas como gerenciamento de atributos, rastreabilidade e gestão do fluxo de trabalho (workflow) de requisitos. Ferramentas comuns de escritório (como editores de texto e planilhas) frequentemente são utilizadas na prática, invalidando a alternativa A. Portanto, a alternativa correta é a B.",
+    "resposta_correta": "C",
+    "explicacao": "No IREB CPRE-FL v3.x (Suporte de Ferramentas), gerenciar o fluxo de trabalho de ER é função das ferramentas de Gerenciamento do Processo de ER, não de Gerenciamento de Requisitos (tornando B falsa). Já as ferramentas de Colaboração em ER são utilizadas justamente para compartilhar requisitos entre stakeholders (C correta).",
     "imagem": null,
     "print": "C:/Users/filip/Pictures/Screenshots/Simulado 2/Captura de tela 2026-11-23 172358.png"
   },
@@ -1316,8 +1315,8 @@
       "C": "Protótipos experimentais",
       "D": "Protótipos exploratórios"
     },
-    "resposta_correta": "B",
-    "explicacao": "Segundo o Syllabus do IREB CPRE-FL, o protótipo de compreensão compartilhada (shared understanding prototype) é utilizado especificamente com o objetivo de estabelecer um entendimento comum entre os stakeholders e a equipe de desenvolvimento, servindo para refinar requisitos e verificar sua validade de forma interativa.",
+    "resposta_correta": "D",
+    "explicacao": "O IREB CPRE-FL v3.x define três tipos oficiais de protótipos: Exploratórios, Experimentais e Evolucionários. \"Protótipo de compreensão compartilhada\" (B) não existe na taxonomia oficial. Protótipos exploratórios (D) são protótipos descartáveis usados justamente para estabelecer entendimento compartilhado, refinar e validar requisitos.",
     "imagem": null,
     "print": "C:/Users/filip/Pictures/Screenshots/Simulado 2/Captura de tela 2026-11-23 172425.png"
   },
@@ -1537,10 +1536,10 @@
       "E": "Cenários e storyboards"
     },
     "resposta_correta": [
-      "B",
-      "C"
+      "C",
+      "D"
     ],
-    "explicacao": "Segundo o Syllabus do IREB CPRE-FL, as técnicas de elicitação são divididas em categorias como técnicas de levantamento/coleta (como Brainstorming e Workshops), técnicas baseadas em observação, baseadas em documentos e baseadas em criatividade. Brainstorming e Workshops são técnicas de elicitação amplamente reconhecidas e utilizadas para coleta colaborativa de requisitos com os stakeholders.",
+    "explicacao": "No IREB CPRE-FL v3.x, as técnicas de elicitação dividem-se em Técnicas de Coleta (Questionamento, Colaboração = Workshops [C], Observação = Aprendizagem/Apprenticing [D] e Baseadas em Artefatos) e Técnicas de Design e Geração de Ideias (Criatividade = Brainstorming [B], Analogia [A], Cenários/Storyboards [E]). Portanto, C e D são técnicas de coleta.",
     "imagem": null,
     "print": "C:/Users/filip/Pictures/Screenshots/Simulado 2/Captura de tela 2026-11-23 172526.png"
   },
@@ -1556,8 +1555,8 @@
       "C": "Uma linha de base é uma configuração estável, validada e controlada por mudanças que constitui um marco ou outro tipo de ponto de descanso no projeto.",
       "D": "Uma configuração sempre possui 2 dimensões: produto e versão."
     },
-    "resposta_correta": "D",
-    "explicacao": "Segundo o Syllabus do IREB CPRE-FL, uma configuração não está restrita a apenas duas dimensões (produto e versão), podendo envolver múltiplas variantes, versões e produtos interdependentes. As demais afirmações estão corretas de acordo com os conceitos de gerenciamento de requisitos, baselines e versionamento.",
+    "resposta_correta": "A",
+    "explicacao": "No IREB CPRE-FL v3.x, uma configuração possui sempre 2 dimensões (produto e versão — D verdadeira), uma baseline é uma configuração estável, validada e sob controle de mudanças (C verdadeira) e em ágil o sprint backlog atua como baseline da iteração (B verdadeira). Porém, uma configuração é imutável e contém no máximo uma versão fixa de cada item — ela não possui múltiplas versões de si mesma (A é a incorreta).",
     "imagem": null,
     "print": "C:/Users/filip/Pictures/Screenshots/Simulado 2/Captura de tela 2026-11-23 172530.png"
   },
@@ -1877,8 +1876,8 @@
       "C": "Processo de ER Orientado ao Produto",
       "D": "Processo de ER Participativo"
     },
-    "resposta_correta": "B",
-    "explicacao": "Segundo o Syllabus do IREB CPRE-FL, um processo de engenharia de requisitos iterativo, exploratório e específico do cliente é tipicamente associado aabordagens ágeis ou customizadas de desenvolvimento sob medida, mas nenhuma das outras opções apresentadas (Contratual, Orientado ao Produto, Participativo) define precisamente essa tríade conceitual exata descrita no enunciado. Portanto, a opção correta é 'Todas as outras opções estão erradas'.",
+    "resposta_correta": "D",
+    "explicacao": "Nas configurações padrão de processo de ER do IREB CPRE-FL v3.x, o Processo de ER Participativo (D) é definido exatamente pela tríade: iterativo, exploratório e específico do cliente (enquanto o Contratual é linear, prescritivo e específico do cliente; e o Orientado a Produto é iterativo, exploratório e orientado ao mercado).",
     "imagem": null,
     "print": "C:/Users/filip/Pictures/Screenshots/Simulado 3/Captura de tela 2026-11-23 172730.png"
   },
@@ -1989,8 +1988,8 @@
       "C": "Normalmente, ela é estabelecida e preservada como um ponto de referência estável em meio à natureza dinâmica e acelerada de um projeto.",
       "D": "Ela é uma configuração de requisitos formalmente aprovada."
     },
-    "resposta_correta": "B",
-    "explicacao": "Uma linha de base (baseline) é uma configuração aprovada de produtos de trabalho (como requisitos) que serve como ponto de referência estável e pode evoluir em múltiplas versões ao longo do tempo. A afirmação de que possui 'sempre 2 dimensões: produto e versão' está incorreta (EXCETO), pois o gerenciamento de configuração pode envolver diferentes dimensões (como produto/estrutura, versão, variantes, entre outras) e não se limita rigidamente a esse conceito.",
+    "resposta_correta": "A",
+    "explicacao": "No IREB CPRE-FL v3.x, toda configuração (e portanto toda baseline) sempre possui 2 dimensões: produto e versão (B é verdadeira). Uma baseline é formalmente aprovada e imutável — ela não pode ter múltiplas versões de si mesma (qualquer alteração gera uma nova baseline). Logo, A é a exceção.",
     "imagem": null,
     "print": "C:/Users/filip/Pictures/Screenshots/Simulado 3/Captura de tela 2026-11-23 172757.png"
   },
@@ -2078,7 +2077,7 @@
     "resposta_correta": [
       "B"
     ],
-    "explicacao": "Analisando o template EARS (Easy Approach to Requirements Syntax) com a estrutura proposta '[<Condição>] <Sujeito> <Ação> <Objetos> [<Restrição>]':\n- Alternativa A está incorreta pois falta o <Sujeito> (quem deve exibir?).\n- Alternativa B está correta pois segue rigorosamente o template: [Quando a temperatura ultrapassar 80°C] (Condição) + a unidade de controle (Sujeito) + deverá desligar (Ação) + o aquecedor (Objetos) + [por 10 minutos] (Restrição/Parâmetro temporal).\n- Alternativa C está incorreta pois usa voz passiva no corpo principal ('será gerado pela impressora'), violando a estrutura declarativa e direta do sujeito e ação.\n- Alternativa D está incorreta pois falta a restrição ou os elementos estão incompletos na estrutura de restrição temporal.\n- Alternativa E está incorreta pois coloca a restrição no início no formato de evento/gatilho incorreto para este tipo de requisito condicional.",
+    "explicacao": "Seguindo o template de frases do IREB CPRE-FL, a obrigação legal/mandatória de um requisito deve usar o verbo modal \"deverá\" (shall), como em B (\"deverá desligar\"). Em D, o verbo \"exibirá\" (will) indica mera declaração factual/futura, não obrigação formal de requisito.",
     "imagem": null,
     "print": "C:/Users/filip/Pictures/Screenshots/Simulado 3/Captura de tela 2026-11-23 172817.png"
   },
@@ -2313,8 +2312,8 @@
       "C": "Os requisitos do negócio, do sistema e dos stakeholders normalmente ocorrem em um nível de abstração mais alto do que os requisitos de domínio/subsistema/componente.",
       "D": "Se o que está sendo especificado for um elemento de baixo nível da solução, naturalmente o requisito associado a este elemento deverá ser especificado em um baixo nível de abstração."
     },
-    "resposta_correta": "C",
-    "explicacao": "Segundo o Syllabus do IREB CPRE-FL, os requisitos podem ser categorizados por diferentes níveis de abstração. Requisitos de negócio, de stakeholders e do sistema definem o escopo geral, metas e visões globais, situando-se em um nível de abstração mais elevado, enquanto requisitos de componentes, subsistemas e domínio entram em detalhes específicos de implementação ou do domínio técnico da solução (baixo nível). Misturar níveis de abstração sem critério prejudica a clareza e a legibilidade dos produtos de trabalho.",
+    "resposta_correta": "D",
+    "explicacao": "No IREB CPRE-FL v3.x, requisitos de domínio estão em alto nível de abstração junto aos requisitos de negócio e stakeholders (logo C é falsa ao agrupá-los com subsistema/componente). Já D é verdadeira: quando se especifica um elemento de baixo nível da solução, o requisito associado deve naturalmente estar em um baixo nível de abstração.",
     "imagem": null,
     "print": "C:/Users/filip/Pictures/Screenshots/Simulado 3/Captura de tela 2026-11-23 172937.png"
   },
@@ -2539,8 +2538,8 @@
       "C": "As configurações não precisam ser identificadas exclusivamente.",
       "D": "Os requisitos contidos em uma configuração não precisam estar logicamente conectados entre si."
     },
-    "resposta_correta": "A",
-    "explicacao": "Segundo o Syllabus do IREB CPRE-FL, uma linha de base (baseline) consiste em um conjunto de produtos de trabalho logicamente relacionados que foram formalmente revistos e acordados, servindo de base para o desenvolvimento posterior e que pode ser alterado apenas através de um procedimento formal de controle de mudanças.",
+    "resposta_correta": "B",
+    "explicacao": "No IREB CPRE-FL, um conjunto consistente de produtos de trabalho logicamente coerentes define uma configuração (não necessariamente uma baseline, que exige aprovação formal e marco — tornando A falsa). Uma das propriedades fundamentais de uma configuração é ser imutável (B): qualquer modificação cria uma nova configuração.",
     "imagem": null,
     "print": "C:/Users/filip/Pictures/Screenshots/Simulado 4/Captura de tela 2026-11-23 173200.png"
   },
@@ -2583,7 +2582,7 @@
     "codigo": "ID-157",
     "enunciado": "No que diz respeito aos critérios de qualidade dos requisitos, é INCORRETO dizer que:",
     "tipo": "multipla",
-    "quantidade_respostas": "4",
+    "quantidade_respostas": "3",
     "alternativas": {
       "A": "Requisitos e especificações individuais devem aderir à mesma qualidade critérios.",
       "B": "\"Completo\" é um critério de qualidade exclusivo para produtos de trabalho que cobrem múltiplos requisitos.",
@@ -2594,10 +2593,9 @@
     "resposta_correta": [
       "A",
       "C",
-      "D",
       "E"
     ],
-    "explicacao": "Segundo o Syllabus do IREB CPRE-FL, os critérios de qualidade aplicam-se de forma distinta dependendo se o item avaliado é um requisito individual ou um produto de trabalho que abrange múltiplos requisitos. A afirmativa B está CORRETA ('completo' aplica-se a conjuntos/produtos de trabalho). As demais afirmativas são INCORRETAS: os requisitos não compartilham exatamente os mesmos critérios sem distinção (A), 'não redundante' aplica-se a conjuntos ou múltiplos requisitos e não a um requisito isolado (C), os requisitos devem atender adequadamente aos critérios de qualidade definidos (D), e nem todos os critérios possuem a mesma importância relativa, pois dependem do contexto do projeto (E). Como a questão pede o que é INCORRETO, as alternativas A, C, D e E devem ser selecionadas.",
+    "explicacao": "A questão pede o que é INCORRETO. O Handbook do IREB CPRE-FL v3.x afirma explicitamente que os requisitos não precisam cumprir integralmente todos os critérios de qualidade (alguns são mais importantes que outros conforme o contexto — logo D é verdadeira, assim como B, pois \"Completo\" é critério de produto de trabalho). Portanto, apenas A, C e E estão incorretas.",
     "imagem": null,
     "print": "C:/Users/filip/Pictures/Screenshots/Simulado 4/Captura de tela 2026-11-23 173216.png"
   },
@@ -2661,7 +2659,7 @@
     "numero": 149,
     "codigo": "ID-169",
     "enunciado": "Qual das seguintes situações favorece a adoção de um processo de ER exploratório?",
-    "tipo": "multipla",
+    "tipo": "unica",
     "quantidade_respostas": "1",
     "alternativas": {
       "A": "Há precedência dos prazos e custos em relação às funcionalidades e escopo.",
@@ -2669,9 +2667,7 @@
       "C": "O desenvolvimento do sistema especificado poderá ser licitado ou terceirizado.",
       "D": "As partes interessadas não estão disponíveis para fornecer feedback contínuo."
     },
-    "resposta_correta": [
-      "B"
-    ],
+    "resposta_correta": "B",
     "explicacao": "Segundo o Syllabus do IREB CPRE-FL, um processo de Engenharia de Requisitos exploratório é adequado quando os requisitos não são conhecidos antecipadamente e precisam ser descobertos progressivamente (por exemplo, quando as partes interessadas têm apenas uma vaga ideia de suas necessidades). Processos orientados a planos/especificação completa são preferidos quando há contratos de licitação/terceirização (opção C), restrições rígidas de prazo/custo (opção A) ou quando há necessidade de especificações estáveis antes do desenvolvimento.",
     "imagem": null,
     "print": "C:/Users/filip/Pictures/Screenshots/Simulado 4/Captura de tela 2026-11-23 173232.png"
@@ -2708,9 +2704,9 @@
     },
     "resposta_correta": [
       "B",
-      "E"
+      "D"
     ],
-    "explicacao": "Segundo o syllabus do IREB CPRE-FL, as técnicas de priorização são fundamentalmente classificadas em dois grandes tipos: Analítico (que utiliza métodos matemáticos, escalas ou ponderações para determinar a prioridade com base em critérios definidos) e Democrata ou Participativo (onde os stakeholders participam e votam para definir conjuntamente a prioridade dos requisitos).",
+    "explicacao": "Segundo o Syllabus oficial do IREB CPRE-FL, as técnicas de priorização de requisitos são classificadas em dois tipos: Analíticas (sistemáticas e multicritério com ponderação, como AHP, Matriz de Wiegers e QFD) e Ad hoc (mais rápidas e baseadas em julgamento subjetivo ou critério único, como MoSCoW, Top-Ten, Ranking e Modelo Kano).",
     "imagem": null,
     "print": "C:/Users/filip/Pictures/Screenshots/Simulado 4/Captura de tela 2026-11-23 173242.png"
   },
@@ -2753,7 +2749,7 @@
     "codigo": "ID-162",
     "enunciado": "Todos os itens a seguir são técnicas de elicitação, EXCETO",
     "tipo": "multipla",
-    "quantidade_respostas": "1",
+    "quantidade_respostas": "2",
     "alternativas": {
       "A": "Previsão",
       "B": "Questionário",
@@ -3148,8 +3144,8 @@
       "C": "Nominalizações foram utilizadas.",
       "D": "O requisito está escrito na voz passiva."
     },
-    "resposta_correta": "C",
-    "explicacao": "De acordo com o Syllabus do IREB CPRE-FL, o uso de nominalizações (transformar verbos ou adjetivos em substantivos, como 'calculada' vindo de 'calcular', ou o uso do substantivo abstrato 'confiabilidade') oculta quem executa a ação e reduz a clareza e testabilidade do requisito, sendo considerado um dos problemas sintáticos mais graves em linguagem natural na Engenharia de Requisitos.",
+    "resposta_correta": "D",
+    "explicacao": "Na frase \"A confiabilidade do sistema deve ser calculada considerando a publicação MIL-HDBK-338B\", a construção \"deve ser calculada\" está na voz passiva (D), omitindo o ator/responsável pela ação. Não se trata de nominalização (que seria \"o cálculo\").",
     "imagem": null,
     "print": "C:/Users/filip/Pictures/Screenshots/Simulado 4/Captura de tela 2026-11-23 173447.png"
   },
@@ -3158,7 +3154,7 @@
     "codigo": "ID-168",
     "enunciado": "Vários fatores influenciam a forma como o processo de ER deve ser configurado. Em relação a este tópico, quais das seguintes frases são verdadeiras?",
     "tipo": "multipla",
-    "quantidade_respostas": "2",
+    "quantidade_respostas": "3",
     "alternativas": {
       "A": "Quando se espera um alto volume de mudanças nos requisitos, recomenda-se optar por um processo de ER iterativo e adaptável para acomodar e gerenciar eficazmente essas mudanças.",
       "B": "Quanto menos experientes forem os Engenheiros de Requisitos, mais sofisticado o processo de ER precisa ser.",
@@ -3186,8 +3182,8 @@
       "C": "Escopo do sistema",
       "D": "Limite do sistema"
     },
-    "resposta_correta": "C",
-    "explicacao": "De acordo com o Syllabus do IREB CPRE-FL, o escopo do sistema (ou escopo de requisitos) define a delimitação entre o sistema e seu contexto, estabelecendo o que faz parte do sistema (e, portanto, é relevante para o desenvolvimento e elicitação de requisitos) e o que está fora dele.",
+    "resposta_correta": "B",
+    "explicacao": "Segundo o Glossário oficial do IREB CPRE-FL, o Limite do contexto (context boundary — B) separa a parte relevante do ambiente (o contexto do sistema) da parte irrelevante que não precisa ser considerada na ER. Já o Escopo do sistema (C) é o conjunto de coisas que podem ser moldadas e projetadas no desenvolvimento.",
     "imagem": null,
     "print": "C:/Users/filip/Pictures/Screenshots/Simulado 4/Captura de tela 2026-11-23 173456.png"
   },
@@ -3262,7 +3258,7 @@
       "B",
       "D"
     ],
-    "explicacao": "De acordo com o Syllabus do IREB CPRE-FL, a Engenharia de Requisitos classifica os requisitos em três tipos principais: Requisitos Funcionais, Requisitos Não Funcionais e Restrições (tornando B e C falsas se interpretadas como 'três tipos exclusivos' sem contexto, mas 'Restrições' é um dos três tipos fundamentais da taxonomia padrão do IREB). A alternativa D está correta pois um requisito representa a necessidade de uma parte interessada. A alternativa A está incorreta pois o objetivo da ER não é meramente satisfazer 'desejos' (wishes), mas sim as necessidades e objetivos relevantes definidos e acordados. Portanto, as alternativas corretas são B e D.",
+    "explicacao": "No IREB CPRE-FL v3.x, os três tipos oficiais de requisitos são: Requisitos Funcionais, Requisitos de Qualidade e Restrições (por isso B está correta e C está incorreta). Além disso, requisitos expressam desejos/necessidades sobre o sistema (D).",
     "imagem": null,
     "print": "C:/Users/filip/Pictures/Screenshots/Simulado 5/Captura de tela 2026-11-23 173613.png"
   },
@@ -3367,8 +3363,8 @@
       "C": "A parte do ambiente do sistema que é relevante para que o sistema e seus requisitos sejam compreendidos.",
       "D": "Tudo que está dentro dos limites do sistema."
     },
-    "resposta_correta": "A",
-    "explicacao": "De acordo com o glossário e o Syllabus oficial do IREB CPRE-FL, o escopo do sistema (system scope) refere-se à fronteira que delimita o que pertence ao sistema e o que pertence ao seu contexto (o ambiente ao redor).",
+    "resposta_correta": "B",
+    "explicacao": "No Glossário oficial do IREB CPRE-FL v3.x, Escopo do sistema (system scope) é \"o conjunto de coisas que podem ser moldadas e projetadas durante o desenvolvimento de um sistema\" (B). A alternativa A descreve o Limite do sistema (system boundary).",
     "imagem": null,
     "print": "C:/Users/filip/Pictures/Screenshots/Simulado 5/Captura de tela 2026-11-23 173641.png"
   },
@@ -3384,8 +3380,8 @@
       "C": "A - Ambiente\nB - Limite do contexto\nC - Escopo do sistema",
       "D": "A - Ambiente\nB - Limite do contexto\nC - Escopo do sistema"
     },
-    "resposta_correta": "B",
-    "explicacao": "Segundo o Syllabus do IREB CPRE-FL, o diagrama de contexto define a fronteira entre o sistema e seu ambiente (domínio da aplicação). A linha mais externa (A) representa o limite do contexto (context boundary), a região intermediária (B) representa o contexto (parte do ambiente relevante para o sistema) e a região interna (C) representa o sistema propriamente dito.",
+    "resposta_correta": "A",
+    "explicacao": "Na figura do IREB CPRE-FL, A aponta para o Limite do contexto, B representa o Contexto do sistema e C aponta para a região sombreada cinza que extrapola o Limite do Sistema, representando o Escopo do sistema (A).",
     "imagem": "public/media/questoes/ID-188.png",
     "print": "C:/Users/filip/Pictures/Screenshots/Simulado 5/Captura de tela 2026-11-23 173654.png"
   },
@@ -3401,8 +3397,8 @@
       "C": "... manter os requisitos fixos, opondo-se a alterações.",
       "D": "... ignorar o que está além do limite do contexto."
     },
-    "resposta_correta": "A",
-    "explicacao": "De acordo com o Syllabus do IREB CPRE-FL, os engenheiros de requisitos muitas vezes precisam ajudar os stakeholders a descobrir o que realmente precisam, em vez de simplesmente aceitar e executar cegamente o que dizem (o que tornaria a alternativa A incorreta em um contexto de análise crítica, porém nenhuma das outras alternativas apresenta um comportamento correto do engenheiro de requisitos, visto que B promove forte acoplamento com a solução antes do tempo, C contraria a gestão dinâmica de requisitos e D desconsidera o sistema em seu ambiente). Aguarde, analisando detalhadamente a pegadinha da questão: os engenheiros de requisitos NÃO devem fazer apenas o que mandam (A é falsa), mas vamos reavaliar as outras. Na verdade, a questão pode ter sido cortada ou interpretada de forma diferente em exames oficiais. Vamos verificar a correta padrão do IREB para esta questão: frequentemente, os papéis do engenheiro exigem entendimento crítico, mas entre as opções dadas, vamos conferir a real resposta correta do banco IREB. Na verdade, os engenheiros de requisitos devem atuar criticamente. Se a alternativa A diz 'fazer exatamente o que os stakeholders lhes dizem para fazer', isso está ERRADO. Vamos analisar a resposta correta padrão do banco de questões IREB para ID-189: a alternativa correta é a que descreve o papel adequado. Espere, olhando estritamente o syllabus, os engenheiros de requisitos devem elicitar necessidades reais. Se todas as outras são incorretas (depender da solução prevista viola a abstração; manter requisitos fixos viola a agilidade/mudança; ignorar além do limite viola a delimitação do contexto), a alternativa A costuma ser a pegadinha e a resposta correta de outra perspectiva? Não, a alternativa A é falsa. Vamos revisar: na verdade, esta questão específica do simulado possui como gabarito correto uma das opções que reflete a postura correta. Vamos ajustar para a alternativa correta conforme o gabarito oficial do IREB para ID-189.",
+    "resposta_correta": "D",
+    "explicacao": "Segundo o IREB CPRE-FL v3.x, tudo o que está além do limite do contexto pertence ao ambiente irrelevante e deve ser desconsiderado na Engenharia de Requisitos (D). Fazer literalmente tudo o que os stakeholders dizem (A) ignora elicitação crítica, conflitos e restrições.",
     "imagem": null,
     "print": "C:/Users/filip/Pictures/Screenshots/Simulado 5/Captura de tela 2026-11-23 173708.png"
   },
@@ -3704,10 +3700,10 @@
       "E": "Inequívoco"
     },
     "resposta_correta": [
-      "C",
-      "E"
+      "A",
+      "B"
     ],
-    "explicacao": "Segundo o Syllabus do IREB CPRE-FL, os dois critérios de qualidade fundamentais e mais importantes para um requisito individual são a necessidade (o requisito é realmente necessário para atingir os objetivos do sistema) e a univocidade/inequivocidade (o requisito é compreendido de forma idêntica por todos os stakeholders, sem ambiguidades).",
+    "explicacao": "O Handbook oficial do IREB CPRE-FL v3.x estabelece explicitamente que Adequação (A — Adequado) e Compreensibilidade (B — Compreensível) são os dois critérios de qualidade mais importantes para requisitos individuais: sem eles, um requisito é inútil ou até prejudicial.",
     "imagem": null,
     "print": "C:/Users/filip/Pictures/Screenshots/Simulado 5/Captura de tela 2026-11-23 173819.png"
   },
@@ -3774,8 +3770,8 @@
       "C": "A - Esperadas\nB - Básicas\nC - Inesperadas",
       "D": "A - Inesperadas\nB - Básicas\nC - Esperadas"
     },
-    "resposta_correta": "D",
-    "explicacao": "De acordo com o Modelo de Kano no Syllabus do IREB CPRE-FL, as categorias de requisitos são classificadas com base na satisfação do cliente e na implementação. A curva A representa os requisitos atrativos / inesperados (ou excitement factors), a curva B representa os requisitos básicos / obrigatórios (dissatisfiers), e a curva C representa os requisitos lineares / esperados (performance / must-be/one-dimensional dependendo da nomenclatura, mas no modelo padrão Kano: A=Atrativos/Inesperados, B=Básicos, C=Desempenho/Esperados). Portanto, a alternativa correta é D.",
+    "resposta_correta": "A",
+    "explicacao": "No gráfico do Modelo Kano (ID-210.png), a curva superior (A) representa fatores Inesperados/de encantamento (delighters), a reta diagonal (B) representa fatores Esperados/de desempenho (satisfiers) e a curva inferior (C) representa fatores Básicos/implícitos (dissatisfiers). Portanto, a resposta correta é A.",
     "imagem": "public/media/questoes/ID-210.png",
     "print": "C:/Users/filip/Pictures/Screenshots/Simulado 5/Captura de tela 2026-11-23 173841.png"
   },
@@ -3855,7 +3851,7 @@
     "codigo": "ID-215",
     "enunciado": "Quais das situações a seguir favorece a adoção de um processo de ER específico para o cliente?",
     "tipo": "multipla",
-    "quantidade_respostas": "1",
+    "quantidade_respostas": "2",
     "alternativas": {
       "A": "O cliente deseja uma especificação de requisitos que possa servir como contrato.",
       "B": "O sistema será utilizado principalmente pela organização que encomendou o sistema e que paga pelo seu desenvolvimento.",
@@ -3917,8 +3913,8 @@
       "C": "Ferramentas de \"gestão de requisitos\" são utilizadas para gerenciar o fluxo de trabalho de ER.",
       "D": "Ferramentas de \"Documentação de conhecimento sobre os requisitos\" são utilizadas para compartilhamento de requisitos."
     },
-    "resposta_correta": "B",
-    "explicacao": "De acordo com o Syllabus do IREB CPRE-FL, o suporte de ferramentas na Engenharia de Requisitos abrange diferentes categorias. Ferramentas de gestão de requisitos (Requirements Management Tools) são usadas para gerenciar atributos, versões, baselines e a rastreabilidade dos requisitos. Ferramentas de gestão de processos auxiliam no monitoramento do fluxo de trabalho e do progresso das atividades de ER. Ferramentas genéricas do Office muitas vezes carecem de recursos fundamentais como rastreabilidade automatizada e gestão rigorosa de mudanças, não sendo consideradas ideais para projetos complexos.",
+    "resposta_correta": "D",
+    "explicacao": "No IREB CPRE-FL v3.x, as alternativas B e C trocam os papéis entre ferramentas de Gerenciamento do Processo de ER (fluxo de trabalho) e Gerenciamento de Requisitos (rastreamento/versões). A alternativa D está correta ao afirmar que ferramentas de documentação do conhecimento de requisitos apoiam o compartilhamento dos requisitos.",
     "imagem": null,
     "print": "C:/Users/filip/Pictures/Screenshots/Simulado 5/Captura de tela 2026-11-23 173925.png"
   },
@@ -4048,7 +4044,7 @@
       "D": "Quanto mais stakeholders forem encontrados, mais difícil será encontrar stakeholders adicionais."
     },
     "resposta_correta": "C",
-    "explicacao": "Segundo o syllabus do IREB CPRE-FL, o modelo cebola de Alexander categoriza os stakeholders em camadas (sistema, contexto organizacional, ambiente mais amplo). Mesmo as partes interessadas localizadas nos círculos mais externos (ambiente mais amplo) podem exercer influência ou ser afetadas pelo sistema e, portanto, ainda são relevantes para a Engenharia de Requisitos. A alternativa A está incorreta porque a importância de um stakeholder depende do contexto e dos objetivos do sistema. A alternativa B está incorreta porque usuários externos costumam ser mais difíceis de contatar do que usuários internos. A alternativa D está incorreta, pois a lei de rendimentos marginais decrescentes na identificação de stakeholders sugere que, à medida que avançamos, encontrar novos stakeholders torna-se mais difícil, mas a afirmação inverte a lógica ou descreve um cenário onde quanto mais se acha, mais se acha, o que contraria a saturação.",
+    "explicacao": "A afirmação C está correta de acordo com o IREB CPRE-FL. A alternativa D está incorreta porque o princípio da bola de neve (snowball principle) afirma justamente o oposto: quanto mais stakeholders são identificados, mais fácil se torna descobrir outros stakeholders relevantes.",
     "imagem": null,
     "print": "C:/Users/filip/Pictures/Screenshots/Simulado 5/Captura de tela 2026-11-23 174005.png"
   }

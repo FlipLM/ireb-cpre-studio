@@ -55,8 +55,8 @@ describe('Plataforma IREB CPRE-FL — Integridade do Banco, Correção e Persist
     expect(report.valid).toBe(true);
     expect(report.totalInFile).toBe(225);
     expect(report.importedCount).toBe(225);
-    expect(report.unicaCount).toBe(169);
-    expect(report.multiplaCount).toBe(56);
+    expect(report.unicaCount).toBe(170);
+    expect(report.multiplaCount).toBe(55);
     expect(report.withImageCount).toBe(11);
     expect(report.missingImageCount).toBe(0);
     expect(report.duplicateCodes).toHaveLength(0);

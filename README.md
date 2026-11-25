@@ -54,6 +54,7 @@ O **CPRE Studio** resolve isso unindo **ciência de aprendizagem** (revisão esp
 
 ## 📸 Prints da Plataforma
 
+### 💻 Versão Desktop — Estudos, Simulados & Módulo RPG
 <table>
   <tr>
     <td align="center" width="50%">
@@ -69,14 +70,52 @@ O **CPRE Studio** resolve isso unindo **ciência de aprendizagem** (revisão esp
   </tr>
   <tr>
     <td align="center" width="50%">
+      <img src="docs/screenshots/ireb-rpg-mapa.png" alt="CPRE Studio — Mapa da Dungeon no Módulo RPG" width="100%" /><br/>
+      <strong>🗺️ RPG — Mapa de Nós (Gruta Esquecida)</strong><br/>
+      <sub>Grafo DAG de 10 níveis com bifurcações, checkpoints e Chefe no nível 10</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/screenshots/ireb-rpg-combate.png" alt="CPRE Studio — Arena de Combate RPG" width="100%" /><br/>
+      <strong>⚔️ RPG — Arena de Combate Local-First</strong><br/>
+      <sub>HERO TURN / ENEMY TURN (&ge; 60s), baralho aleatório das 225 questões e dano proporcional</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
       <img src="docs/screenshots/ireb-simulados.png" alt="CPRE Studio — Simulados Cronometrados" width="100%" /><br/>
       <strong>⏱️ Simulados Cronometrados</strong><br/>
       <sub>Configurador flexível com gabarito bloqueado durante a prova</sub>
     </td>
     <td align="center" width="50%">
       <img src="docs/screenshots/ireb-relatorios.png" alt="CPRE Studio — Relatórios e Mapa de Domínio" width="100%" /><br/>
-      <strong>📈 Relatórios & Mapa de Domínio</strong><br/>
+      <strong>📈 Relatórios &amp; Mapa de Domínio</strong><br/>
       <sub>Evolução temporal, domínio por tópico e histórico detalhado</sub>
+    </td>
+  </tr>
+</table>
+
+### 📱 Versão Mobile (PWA Instalável)
+<table>
+  <tr>
+    <td align="center" width="25%">
+      <img src="docs/screenshots/ireb-mobile-dashboard.png" alt="CPRE Studio Mobile — Visão Geral" width="100%" /><br/>
+      <strong>📊 Visão Geral</strong><br/>
+      <sub>Bottom Tab Bar nativa</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="docs/screenshots/ireb-mobile-estudar.png" alt="CPRE Studio Mobile — Modo Estudo com Prof. IREB" width="100%" /><br/>
+      <strong>📖 Estudo + Prof. IREB</strong><br/>
+      <sub>Tutor flutuante em pixel art</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="docs/screenshots/ireb-mobile-rpg-mapa.png" alt="CPRE Studio Mobile — Mapa do RPG" width="100%" /><br/>
+      <strong>🗺️ Mapa RPG Mobile</strong><br/>
+      <sub>Exploração vertical responsiva</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="docs/screenshots/ireb-mobile-rpg-combate.png" alt="CPRE Studio Mobile — Arena de Combate RPG" width="100%" /><br/>
+      <strong>⚔️ Combate Mobile</strong><br/>
+      <sub>Arena adaptada para toque</sub>
     </td>
   </tr>
 </table>

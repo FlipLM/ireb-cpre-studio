@@ -103,3 +103,231 @@
 .animate-card-enter {
   animation: card-enter 0.25s ease-out both;
 }
+
+/* ==========================================================================
+   MÓDULO RPG "JORNADA DO HERÓI" — UI MEDIEVAL PIXEL ART & ANIMAÇÕES
+   ========================================================================== */
+.rpg-pixel {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.rpg-panel {
+  background: linear-gradient(180deg, rgba(38, 28, 25, 0.94) 0%, rgba(24, 18, 17, 0.96) 100%);
+  border: 2px solid #745338;
+  box-shadow:
+    inset 0 0 0 1px rgba(212, 162, 76, 0.22),
+    0 14px 36px rgba(0, 0, 0, 0.65);
+}
+
+.rpg-panel-gold {
+  background: linear-gradient(180deg, rgba(44, 32, 27, 0.95) 0%, rgba(26, 19, 17, 0.97) 100%);
+  border: 2px solid #c9974b;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 224, 150, 0.35),
+    inset 0 0 0 2px rgba(92, 62, 36, 0.75),
+    0 18px 44px rgba(0, 0, 0, 0.72);
+}
+
+.rpg-btn-gold {
+  background: linear-gradient(180deg, #e5b75a 0%, #c68d32 55%, #9d6920 100%);
+  border: 2px solid #f7dc94;
+  color: #1c1208;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 250, 220, 0.65),
+    0 4px 14px rgba(0, 0, 0, 0.45);
+  transition: transform 0.14s ease, filter 0.14s ease;
+}
+
+.rpg-btn-gold:hover:not(:disabled) {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+.rpg-btn-gold:active:not(:disabled) {
+  transform: translateY(1px) scale(0.98);
+}
+
+.rpg-btn-emerald {
+  background: linear-gradient(180deg, #2d7d5e 0%, #1d5c44 55%, #144130 100%);
+  border: 2px solid #86efac;
+  color: #ecfdf5;
+  box-shadow:
+    inset 0 1px 0 rgba(187, 247, 208, 0.45),
+    0 4px 14px rgba(0, 0, 0, 0.5);
+  transition: transform 0.14s ease, filter 0.14s ease;
+}
+
+.rpg-btn-emerald:hover:not(:disabled) {
+  filter: brightness(1.12);
+  transform: translateY(-1px);
+}
+
+.rpg-hud-bar {
+  background: linear-gradient(180deg, #272026 0%, #171318 100%);
+  border: 2px solid #8f6b47;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 224, 150, 0.25),
+    0 8px 24px rgba(0, 0, 0, 0.75);
+}
+
+.rpg-stone-frame {
+  background: linear-gradient(180deg, #252229 0%, #17151b 100%);
+  border: 3px solid #7d6348;
+  box-shadow:
+    inset 0 0 0 2px #100e13,
+    inset 0 0 0 4px rgba(212, 162, 76, 0.28),
+    0 20px 50px rgba(0, 0, 0, 0.85);
+}
+
+.rpg-option-btn {
+  background: linear-gradient(180deg, #2d2a35 0%, #1d1b24 100%);
+  border: 2px solid #7c654b;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 232, 180, 0.14),
+    0 4px 10px rgba(0, 0, 0, 0.45);
+  transition: all 0.15s ease;
+}
+
+.rpg-option-btn:hover:not(:disabled) {
+  border-color: #e5b75a;
+  background: linear-gradient(180deg, #3a312c 0%, #261f1c 100%);
+  transform: translateY(-1px);
+}
+
+.rpg-option-btn-selected {
+  background: linear-gradient(180deg, #5e4422 0%, #3d2a14 100%);
+  border: 2px solid #f7dc94;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 240, 190, 0.45),
+    0 0 18px rgba(245, 196, 81, 0.4);
+}
+
+.rpg-hex {
+  clip-path: polygon(50% 0%, 95% 25%, 95% 75%, 50% 100%, 5% 75%, 5% 25%);
+}
+
+@keyframes rpg-idle-bob {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes rpg-boss-hover {
+  0%, 100% { transform: translateY(0px) scale(1); }
+  50% { transform: translateY(-7px) scale(1.02); }
+}
+
+@keyframes rpg-attack-right {
+  0% { transform: translateX(0) scale(1); }
+  35% { transform: translateX(26px) translateY(-6px) scale(1.1); }
+  100% { transform: translateX(0) scale(1); }
+}
+
+@keyframes rpg-attack-left {
+  0% { transform: translateX(0) scale(1); }
+  35% { transform: translateX(-28px) translateY(-6px) scale(1.12); }
+  100% { transform: translateX(0) scale(1); }
+}
+
+@keyframes rpg-hit-flash {
+  0%, 100% { transform: translateX(0); filter: brightness(1); }
+  20% { transform: translateX(-9px); filter: brightness(2) saturate(2) drop-shadow(0 0 14px rgba(244, 63, 94, 0.9)); }
+  45% { transform: translateX(8px); filter: brightness(1.6) drop-shadow(0 0 10px rgba(244, 63, 94, 0.7)); }
+  70% { transform: translateX(-4px); }
+}
+
+@keyframes rpg-parry-glow {
+  0% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(56, 189, 248, 0)); }
+  40% { transform: scale(1.1); filter: drop-shadow(0 0 22px rgba(56, 189, 248, 0.95)); }
+  100% { transform: scale(1); filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.4)); }
+}
+
+@keyframes rpg-screen-shake {
+  0%, 100% { transform: translate(0, 0); }
+  15% { transform: translate(-8px, 4px); }
+  30% { transform: translate(8px, -4px); }
+  45% { transform: translate(-6px, -3px); }
+  60% { transform: translate(6px, 3px); }
+  75% { transform: translate(-3px, 1px); }
+}
+
+@keyframes rpg-vfx-burst {
+  0% { opacity: 0; transform: scale(0.45) rotate(-10deg); }
+  25% { opacity: 1; transform: scale(1.22) rotate(4deg); }
+  75% { opacity: 1; transform: scale(1.05) rotate(0deg); }
+  100% { opacity: 0; transform: scale(1.35) translateY(-10px); }
+}
+
+@keyframes rpg-dmg-float {
+  0% { opacity: 0; transform: translate(-50%, 10px) scale(0.7); }
+  20% { opacity: 1; transform: translate(-50%, -8px) scale(1.15); }
+  75% { opacity: 1; transform: translate(-50%, -32px) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -52px) scale(0.95); }
+}
+
+@keyframes rpg-ember-rise {
+  0% { transform: translateY(0px) translateX(0px); opacity: 0; }
+  20% { opacity: 0.75; }
+  80% { opacity: 0.5; }
+  100% { transform: translateY(-140px) translateX(18px); opacity: 0; }
+}
+
+@keyframes rpg-snow-fall {
+  0% { transform: translateY(-20px) translateX(0px); opacity: 0; }
+  20% { opacity: 0.7; }
+  80% { opacity: 0.55; }
+  100% { transform: translateY(150px) translateX(-20px); opacity: 0; }
+}
+
+@keyframes rpg-dash-flow {
+  to { stroke-dashoffset: -24; }
+}
+
+@keyframes rpg-floor-breathe {
+  0%, 100% { opacity: 0.35; transform: scale(1); }
+  50% { opacity: 0.72; transform: scale(1.08); }
+}
+
+@keyframes rpg-crystal-twinkle {
+  0%, 100% { opacity: 0; transform: scale(0.6); }
+  35% { opacity: 0.55; transform: scale(1.05); }
+  65% { opacity: 0.15; transform: scale(0.8); }
+}
+
+@keyframes rpg-spore-drift {
+  0% { transform: translate(0px, 0px) scale(0.75); opacity: 0; }
+  25% { opacity: 0.45; }
+  55% { transform: translate(18px, -28px) scale(1); opacity: 0.55; }
+  85% { opacity: 0.3; }
+  100% { transform: translate(-10px, -62px) scale(0.65); opacity: 0; }
+}
+
+@keyframes rpg-mist-drift {
+  0% { transform: translateX(-6%) translateY(0%); opacity: 0.08; }
+  50% { transform: translateX(6%) translateY(-3%); opacity: 0.18; }
+  100% { transform: translateX(-6%) translateY(0%); opacity: 0.08; }
+}
+
+@keyframes rpg-torch-flicker {
+  0%, 100% { opacity: 0.48; transform: translate(-50%, -50%) scale(0.95); }
+  30% { opacity: 0.72; transform: translate(-50%, -50%) scale(1.06); }
+  65% { opacity: 0.56; transform: translate(-50%, -50%) scale(0.99); }
+}
+
+.animate-rpg-bob { animation: rpg-idle-bob 2.6s ease-in-out infinite; }
+.animate-rpg-boss-hover { animation: rpg-boss-hover 3.1s ease-in-out infinite; }
+.animate-rpg-attack-right { animation: rpg-attack-right 0.48s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-rpg-attack-left { animation: rpg-attack-left 0.48s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-rpg-hit { animation: rpg-hit-flash 0.52s ease-out both; }
+.animate-rpg-parry { animation: rpg-parry-glow 0.6s ease-out both; }
+.animate-rpg-screen-shake { animation: rpg-screen-shake 0.42s ease-in-out both; }
+.animate-rpg-vfx { animation: rpg-vfx-burst 0.78s ease-out forwards; }
+.animate-rpg-dmg { animation: rpg-dmg-float 1.35s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+.animate-rpg-ember { animation: rpg-ember-rise 4.6s linear infinite; }
+.animate-rpg-snow { animation: rpg-snow-fall 5.4s linear infinite; }
+.animate-rpg-dash { animation: rpg-dash-flow 1.2s linear infinite; }
+.animate-rpg-floor-breathe { animation: rpg-floor-breathe 5.6s ease-in-out infinite; }
+.animate-rpg-crystal-twinkle { animation: rpg-crystal-twinkle 3.4s ease-in-out infinite; }
+.animate-rpg-spore { animation: rpg-spore-drift 6.2s ease-in-out infinite; }
+.animate-rpg-mist { animation: rpg-mist-drift 14s ease-in-out infinite; }
+.animate-rpg-torch { animation: rpg-torch-flicker 2.8s ease-in-out infinite; }

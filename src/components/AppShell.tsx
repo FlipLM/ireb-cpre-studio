@@ -15,16 +15,18 @@ import {
   RotateCcw,
   Settings,
   Star,
+  Swords,
   Volume2,
   VolumeX,
   X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { isSoundEnabled, playSound, setSoundEnabled } from '@/lib/sounds';
+import { isRpgModuleEnabled } from '@/lib/rpg/feature-flag';
 import { AmbientMusicPlayer } from '@/components/AmbientMusicPlayer';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 
-const NAV_ITEMS = [
+const BASE_NAV_ITEMS = [
   { href: '/', label: 'Visão geral', icon: LayoutDashboard },
   { href: '/estudar', label: 'Estudar', icon: BookOpen },
   { href: '/simulados', label: 'Simulados', icon: ClipboardCheck },
@@ -34,6 +36,14 @@ const NAV_ITEMS = [
   { href: '/relatorios', label: 'Relatórios', icon: BarChart3 },
   { href: '/configuracoes', label: 'Configurações', icon: Settings },
 ];
+
+const NAV_ITEMS = isRpgModuleEnabled()
+  ? [
+      ...BASE_NAV_ITEMS.slice(0, 3),
+      { href: '/rpg', label: 'Jornada do Herói (RPG)', icon: Swords },
+      ...BASE_NAV_ITEMS.slice(3),
+    ]
+  : BASE_NAV_ITEMS;
 
 const MOBILE_TABS = [
   { href: '/', label: 'Início', icon: LayoutDashboard },
@@ -73,8 +83,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     router.refresh();
   };
 
-  // Tela de login renderiza limpa sem sidebar nem bottom bar
-  if (pathname === '/login') {
+  // Tela de login e módulo RPG imersivo renderizam limpos sem sidebar clara nem bottom bar
+  if (pathname === '/login' || pathname === '/rpg' || pathname.startsWith('/rpg/')) {
     return <>{children}</>;
   }
 
